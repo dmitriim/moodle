@@ -24,6 +24,7 @@
 
 namespace assignfeedback_editpdf;
 
+use core_files\conversion;
 use DOMDocument;
 
 /**
@@ -186,7 +187,9 @@ EOD;
                         if ($file->get_mimetype() === 'application/pdf') {
                             $files[$filename] = $file;
                         } else if ($convertedfile = $converter->start_conversion($file, 'pdf')) {
-                            $files[$filename] = $convertedfile;
+                            if ($convertedfile->get('status') !== conversion::STATUS_FAILED) {
+                                $files[$filename] = $convertedfile;
+                            }
                         }
                     } else if ($converter->can_convert_format_to('html', 'pdf')) {
                         // Create a tmp stored_file from this html string.
@@ -223,7 +226,7 @@ EOD;
 
                         $convertedfile = $converter->start_conversion($htmlfile, 'pdf');
 
-                        if ($convertedfile) {
+                        if ($convertedfile && $convertedfile->get('status') !== conversion::STATUS_FAILED) {
                             $files[$filename] = $convertedfile;
                         }
                     }
