@@ -24,10 +24,13 @@
 define(['jquery'], function($) {
 
     var SELECTORS = {
+        EVENT_TYPE: '[name="eventtype"]',
         EVENT_GROUP_COURSE_ID: '[name="groupcourseid"]',
         EVENT_GROUP_ID: '[name="groupid"]',
         SELECT_OPTION: 'option',
     };
+
+    var GROUP_OPTION = 'group';
 
     /**
      * Parse the group id select element in the event form and pull out
@@ -68,17 +71,24 @@ define(['jquery'], function($) {
      * @param {object} formElement The root form element
      */
     var addCourseGroupSelectListeners = function(formElement) {
+        var eventTypeSelect = formElement.find(SELECTORS.EVENT_TYPE);
         var courseGroupSelect = formElement.find(SELECTORS.EVENT_GROUP_COURSE_ID);
         var groupSelect = formElement.find(SELECTORS.EVENT_GROUP_ID);
         var groupSelectOptions = groupSelect.find(SELECTORS.SELECT_OPTION);
         var filterGroupSelectOptions = function() {
             var selectedCourseId = courseGroupSelect.val();
+            var selectedType = eventTypeSelect.val();
             var selectedIndex = null;
             var hasGroups = false;
+
+            if (selectedType !== GROUP_OPTION) {
+                groupSelect.prop('disabled', true);
+                return;
+            }
+
             groupSelectOptions.each(function(index, element) {
                 element = $(element);
-
-                if (element.attr('data-course-id') == selectedCourseId) {
+                if (element.attr('data-course-id') === selectedCourseId) {
                     element.removeClass('hidden');
                     element.prop('disabled', false);
                     hasGroups = true;
@@ -100,7 +110,7 @@ define(['jquery'], function($) {
             groupSelect.prop('selectedIndex', selectedIndex);
         };
 
-        courseGroupSelect.on('change', filterGroupSelectOptions);
+        formElement.on('change', filterGroupSelectOptions);
         filterGroupSelectOptions();
     };
 
