@@ -646,6 +646,40 @@ class manager {
             }
         }
 
+        // Include courses again if required and the engine supports it.
+        if ($this->engine->supports_include_all_courses() && self::is_enabled_include_all_courses()) {
+            if ($limitcourseids) {
+                list ($coursesql, $courseparams) = $DB->get_in_or_equal($limitcourseids);
+                $coursesql = 'id ' . $coursesql;
+            } else {
+                $coursesql = '';
+                $courseparams = [];
+            }
+            // Get courses using the same list of fields from enrol_get_my_courses.
+            $courses = $DB->get_records_select('course', $coursesql, $courseparams, '',
+                'id, category, sortorder, shortname, fullname, idnumber, startdate, visible, ' .
+                'groupmode, groupmodeforce, cacherev');
+
+            foreach ($courses as $course) {
+                if (!empty($limitcourseids) && !in_array($course->id, $limitcourseids)) {
+                    // Skip non-included courses.
+                    continue;
+                }
+
+                $coursecontext = \context_course::instance($course->id);
+
+                if (!empty($areasbylevel[CONTEXT_COURSE]) &&
+                    (!$limitcontextids || in_array($coursecontext->id, $limitcontextids))) {
+                    // Add the course contexts the user can view.
+                    foreach ($areasbylevel[CONTEXT_COURSE] as $areaid => $searchclass) {
+                        if ($course->visible || has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
+                            $areascontexts[$areaid][$coursecontext->id] = $coursecontext->id;
+                        }
+                    }
+                }
+            }
+        }
+
         // Return all the data.
         return (object)array('everything' => false, 'usercontexts' => $areascontexts,
                 'separategroupscontexts' => $separategroupscontexts, 'usergroups' => $usergroups,
@@ -1434,5 +1468,14 @@ class manager {
             return self::$phpunitfaketime;
         }
         return microtime(true);
+    }
+
+    /**
+     * Check if search all courses setting is enabled.
+     *
+     * @return bool
+     */
+    public static function is_enabled_include_all_courses() {
+        return !empty(get_config('core', 'searchincludeallcourses'));
     }
 }

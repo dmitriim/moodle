@@ -572,6 +572,9 @@ if ($hassiteconfig) {
             new lang_string('searchallavailablecourses', 'admin'),
             new lang_string('searchallavailablecourses_desc', 'admin'),
             0, $options));
+    $temp->add(new admin_setting_configcheckbox('searchincludeallcourses',
+        new lang_string('searchincludeallcourses', 'admin'), new lang_string('searchincludeallcourses_desc', 'admin'),
+        0));
 
     $ADMIN->add('searchplugins', $temp);
     $ADMIN->add('searchplugins', new admin_externalpage('searchareas', new lang_string('searchareas', 'admin'),

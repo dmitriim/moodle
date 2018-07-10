@@ -611,4 +611,37 @@ abstract class engine {
     public function supports_users() {
         return false;
     }
+
+    /**
+     * Checks if the search engine supports searching all courses.
+     *
+     * If it returns true to this function, the search engine should support searching all courses.
+     * When a Global Search result is returned from a course that the user cannot access or enroll
+     * in, the search result will be limited to the course name and description.
+     *
+     * @return bool True if the search engine supports searching all courses
+     */
+    public function supports_include_all_courses() {
+        return false;
+    }
+
+    /**
+     * Check if we should include document in the search result if access to it is denied .
+     *
+     * @param array $docdata
+     *
+     * @return bool
+     */
+    protected function should_include_denied_doc(array $docdata) {
+        switch ($docdata['areaid']) {
+            case 'core_course-mycourse':
+                $result = ($this->supports_include_all_courses() && manager::is_enabled_include_all_courses());
+                break;
+            default:
+                $result = false;
+                break;
+        }
+
+        return $result;
+    }
 }

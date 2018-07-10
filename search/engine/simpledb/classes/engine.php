@@ -212,7 +212,14 @@ class engine extends \core_search\engine {
                     $this->totalresults--;
                     break;
                 case \core_search\manager::ACCESS_DENIED:
-                    $this->totalresults--;
+                    if ($this->should_include_denied_doc((array)$docdata)) {
+                        $numgranted++;
+                        $doc = $this->to_document($searcharea, (array)$docdata);
+                        $doc->set_limited(true);
+                        $docs[] = $doc;
+                    } else {
+                        $this->totalresults--;
+                    }
                     break;
                 case \core_search\manager::ACCESS_GRANTED:
                     $numgranted++;
@@ -353,5 +360,14 @@ class engine extends \core_search\engine {
             '%' . $q . '%'
         );
         return array($sql, $params);
+    }
+
+    /**
+     * Checks if the search engine supports searching all courses.
+     *
+     * @return bool True if the search engine supports searching all courses
+     */
+    public function supports_include_all_courses() {
+        return true;
     }
 }
