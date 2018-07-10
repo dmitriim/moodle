@@ -203,6 +203,11 @@ abstract class base_block extends base {
             return manager::ACCESS_DELETED;
         }
 
+        // In case we search within all courses, we'd like to check if we need to limit access on the course level.
+        if (manager::should_limit_course_results($instance->courseid)) {
+            return manager::ACCESS_DENIED;
+        }
+
         // Note we do not need to check if the block was hidden or if the user has access to the
         // context, because those checks are included in the list of search contexts user can access
         // that is calculated in manager.php every time they do a query.

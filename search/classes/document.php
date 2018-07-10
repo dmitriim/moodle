@@ -74,6 +74,11 @@ class document implements \renderable, \templatable {
     protected $isnew = false;
 
     /**
+     * @var bool Should be set to true if access to the document is limited.
+     */
+    protected $limited = false;
+
+    /**
      * @var \stored_file[] An array of stored files to attach to the document.
      */
     protected $files = array();
@@ -374,6 +379,24 @@ class document implements \renderable, \templatable {
      */
     public function get_is_new() {
        return $this->isnew;
+    }
+
+    /**
+     * Set limited access for the document.
+     *
+     * @param bool $limited
+     */
+    public function set_limited($limited) {
+        $this->limited = (bool)$limited;
+    }
+
+    /**
+     * Returns if an access to the document is limited.
+     *
+     * @return bool
+     */
+    public function get_limited() {
+        return $this->limited;
     }
 
     /**

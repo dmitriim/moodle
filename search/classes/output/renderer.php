@@ -89,7 +89,13 @@ class renderer extends \plugin_renderer_base {
         $docdata['description1'] = $docdata['description1'] ? shorten_text($docdata['description1'], static::SEARCH_RESULT_TEXT_SIZE, true) : '';
         $docdata['description2'] = $docdata['description2'] ? shorten_text($docdata['description2'], static::SEARCH_RESULT_TEXT_SIZE, true) : '';
 
-        return $this->output->render_from_template('core_search/result', $docdata);
+        if ($doc->get_limited()) {
+            $template = 'core_search/result_limited';
+        } else {
+            $template = 'core_search/result';
+        }
+
+        return $this->output->render_from_template($template, $docdata);
     }
 
     /**

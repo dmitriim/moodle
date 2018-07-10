@@ -148,6 +148,11 @@ abstract class base_activity extends base_mod {
             return \core_search\manager::ACCESS_DENIED;
         }
 
+        // In case we search within all courses, we'd like to check if we need to limit access on the course level.
+        if (\core_search\manager::should_limit_course_results($cminfo->course)) {
+            return \core_search\manager::ACCESS_DENIED;
+        }
+
         return \core_search\manager::ACCESS_GRANTED;
     }
 

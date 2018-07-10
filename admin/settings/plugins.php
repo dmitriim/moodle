@@ -565,8 +565,9 @@ if ($hassiteconfig) {
             new lang_string('searchindextime', 'admin'), new lang_string('searchindextime_desc', 'admin'),
             600));
     $options = [
-        0 => new lang_string('searchallavailablecourses_off', 'admin'),
-        1 => new lang_string('searchallavailablecourses_on', 'admin')
+        \core_search\manager::SEARCH_ENROLLED_COURSES => new lang_string('searchallavailablecourses_off', 'admin'),
+        \core_search\manager::SEARCH_ACCESSIBLE_COURSES => new lang_string('searchallavailablecourses_on', 'admin'),
+        \core_search\manager::SEARCH_ALL_COURSES => new lang_string('searchallavailablecourses_all', 'admin'),
     ];
     $temp->add(new admin_setting_configselect('searchallavailablecourses',
             new lang_string('searchallavailablecourses', 'admin'),

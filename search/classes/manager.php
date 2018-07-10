@@ -98,6 +98,21 @@ class manager {
     const INDEX_PRIORITY_REINDEXING = 50;
 
     /**
+     * @var int Search option: search within enrolled courses only.
+     */
+    const SEARCH_ENROLLED_COURSES = 0;
+
+    /**
+     * @var int Search option: search within all courses the user can access.
+     */
+    const SEARCH_ACCESSIBLE_COURSES = 1;
+
+    /**
+     * @var int Search option: search within all courses.
+     */
+    const SEARCH_ALL_COURSES = 2;
+
+    /**
      * @var \core_search\base[] Enabled search areas.
      */
     protected static $enabledsearchareas = null;
@@ -123,6 +138,11 @@ class manager {
      * @var float Fake current time for use in PHPunit tests
      */
     protected static $phpunitfaketime = 0;
+
+    /**
+     * @var array Locally cached and keyed by used id list of all courses the users can access.
+     */
+    protected static $availablecourses;
 
     /**
      * Constructor, use \core_search\manager::instance instead to get a class instance.
@@ -472,8 +492,7 @@ class manager {
             }
         }
 
-        if (is_siteadmin()) {
-            // Admins have access to all courses regardless of enrolment.
+        if ($this->should_search_all_courses()) {
             if ($limitcourseids) {
                 list ($coursesql, $courseparams) = $DB->get_in_or_equal($limitcourseids);
                 $coursesql = 'id ' . $coursesql;
@@ -1434,5 +1453,65 @@ class manager {
             return self::$phpunitfaketime;
         }
         return microtime(true);
+    }
+
+    /**
+     * @return array
+     * @throws \coding_exception
+     */
+    public static function get_available_courses() {
+        global $USER;
+
+        if (!isset(static::$availablecourses[$USER->id])) {
+            static::$availablecourses = [];
+            static::$availablecourses[$USER->id] = enrol_get_my_courses(array('id', 'cacherev'), 'id', 0, [], true);
+        }
+
+        return static::$availablecourses;
+    }
+
+    /**
+     * Check if we should search in all courses.
+     *
+     * @return bool
+     */
+    protected function should_search_all_courses() {
+        if (is_siteadmin()) {
+            return true;
+        }
+
+        if ($this->engine->supports_search_all_courses() && self::search_all_courses_enabled()) {
+            return true;
+        };
+
+        return false;
+    }
+
+    /**
+     * Check if search all courses setting is enabled.
+     *
+     * @return bool
+     */
+    public static function search_all_courses_enabled() {
+        return get_config('core', 'searchallavailablecourses') == self::SEARCH_ALL_COURSES;
+    }
+
+    /**
+     * Check if we should limit access to the search results from the course.
+     *
+     * @param int $courseid Course ID.
+     *
+     * @return bool
+     */
+    public static function should_limit_course_results($courseid) {
+        if (is_siteadmin()) {
+            return false;
+        }
+
+        if (self::search_all_courses_enabled() && !array_key_exists($courseid, self::get_available_courses())) {
+            return true;
+        }
+
+        return false;
     }
 }
