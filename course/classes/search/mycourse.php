@@ -112,6 +112,11 @@ class mycourse extends \core_search\base {
         if (!$course) {
             return \core_search\manager::ACCESS_DELETED;
         }
+
+        if (\core_search\manager::is_enabled_include_all_courses()) {
+            return \core_search\manager::ACCESS_GRANTED;
+        }
+
         if (can_access_course($course)) {
             return \core_search\manager::ACCESS_GRANTED;
         }

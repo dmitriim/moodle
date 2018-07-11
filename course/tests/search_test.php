@@ -219,6 +219,7 @@ class course_search_testcase extends advanced_testcase {
      * @return void
      */
     public function test_mycourses_access() {
+        $this->resetAfterTest();
 
         // Returns the instance as long as the area is supported.
         $searcharea = \core_search\manager::get_search_area($this->mycoursesareaid);
@@ -245,6 +246,20 @@ class course_search_testcase extends advanced_testcase {
         $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course1->id));
         $this->assertEquals(\core_search\manager::ACCESS_DENIED, $searcharea->check_access($course2->id));
         $this->assertEquals(\core_search\manager::ACCESS_DENIED, $searcharea->check_access($course3->id));
+
+        // Enable "include all courses" feature.
+        set_config('searchincludeallcourses', 1);
+
+        $this->setUser($user1);
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course1->id));
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course2->id));
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course3->id));
+        $this->assertEquals(\core_search\manager::ACCESS_DELETED, $searcharea->check_access(-123));
+
+        $this->setUser($user2);
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course1->id));
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course2->id));
+        $this->assertEquals(\core_search\manager::ACCESS_GRANTED, $searcharea->check_access($course3->id));
     }
 
     /**

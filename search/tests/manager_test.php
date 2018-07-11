@@ -1210,4 +1210,14 @@ class search_manager_testcase extends advanced_testcase {
         // Confirm request table is now empty.
         $this->assertEquals(0, $DB->count_records('search_index_requests'));
     }
+
+    /**
+     * Test that we can check that "include all courses" feature is enabled.
+     */
+    public function test_include_all_courses_enabled() {
+        $this->resetAfterTest();
+        $this->assertFalse(\core_search\manager::is_enabled_include_all_courses());
+        set_config('searchincludeallcourses', 1);
+        $this->assertTrue(\core_search\manager::is_enabled_include_all_courses());
+    }
 }
