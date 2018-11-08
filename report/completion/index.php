@@ -67,6 +67,8 @@ $silast  = optional_param('silast', 'all', PARAM_NOTAGS);
 
 // Whether to show extra user identity information
 $extrafields = get_extra_user_fields($context);
+$extrafields[] = "enrolmentstatus";
+
 $leftcols = 1 + count($extrafields);
 
 // Check permissions

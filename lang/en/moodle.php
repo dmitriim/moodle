@@ -731,6 +731,7 @@ $string['enddate'] = 'Course end date';
 $string['enddate_help'] = 'The course end date is used for determining whether a course should be included in a user\'s list of courses. When the end date is past, the course is no longer listed in the navigation and is listed as past in the course overview. The course end date may also be used by custom reports. Users can still enter the course after the end date; in other words the date does not restrict access.';
 $string['english'] = 'English';
 $string['enrolmentmethods'] = 'Enrolment methods';
+$string['enrolmentstatus'] = 'Enrolment Status';
 $string['entercourse'] = 'Click to enter this course';
 $string['enteremail'] = 'Enter your email address';
 $string['enteremailaddress'] = 'Enter in your email address to reset your

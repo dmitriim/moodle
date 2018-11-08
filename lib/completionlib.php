@@ -1129,7 +1129,7 @@ class completion_info {
      * @return bool
      */
     public function is_tracked_user($userid) {
-        return is_enrolled(context_course::instance($this->course->id), $userid, 'moodle/course:isincompletionreports', true);
+        return is_enrolled(context_course::instance($this->course->id), $userid, 'moodle/course:isincompletionreports', false);
     }
 
     /**
@@ -1178,14 +1178,29 @@ class completion_info {
 
         list($enrolledsql, $params) = get_enrolled_sql(
                 context_course::instance($this->course->id),
-                'moodle/course:isincompletionreports', $groupid, true);
+                'moodle/course:isincompletionreports', $groupid, false);
 
         $allusernames = get_all_user_name_fields(true, 'u');
-        $sql = 'SELECT u.id, u.idnumber, ' . $allusernames;
+
+        $params['now'] = round(time(), -2); // Rounding helps caching in DB.
+        $params['courseid'] = $this->course->id;
+
+        $sql = 'SELECT u.id, u.idnumber, MIN(ue.status) AS "enrolmentstatus", ';
+        $sql .= 'MIN(CASE
+                    WHEN
+                        ue.timeend != 0 AND
+                        :now NOT BETWEEN ue.timestart AND ue.timeend
+                    THEN 0
+                    ELSE 1
+                    END) AS "active_enrolment", ';
+        $sql .= $allusernames;
         if ($extracontext) {
             $sql .= get_extra_user_fields_sql($extracontext, 'u', '', array('idnumber'));
         }
         $sql .= ' FROM (' . $enrolledsql . ') eu JOIN {user} u ON u.id = eu.id';
+        $sql .= ' JOIN {user_enrolments} ue ON ue.userid = eu.id';
+        $sql .= ' JOIN {enrol} e ON ue.enrolid = e.id AND e.courseid = :courseid';
+        $sql .= ' GROUP BY u.id';
 
         if ($where) {
             $sql .= " AND $where";
@@ -1234,10 +1249,22 @@ class completion_info {
         // to avoid making the SQL IN too long
         $results = array();
         $userids = array();
+
         foreach ($users as $user) {
             $userids[] = $user->id;
             $results[$user->id] = $user;
             $results[$user->id]->progress = array();
+
+            if ($user->enrolmentstatus == ENROL_USER_SUSPENDED) {
+                $results[$user->id]->enrolmentstatus = get_string('participationsuspended', 'enrol');
+            } else {
+
+                if ($user->active_enrolment) {
+                    $results[$user->id]->enrolmentstatus = get_string('participationactive', 'enrol');
+                } else {
+                    $results[$user->id]->enrolmentstatus = get_string('participationnotcurrent', 'enrol');
+                }
+            }
         }
 
         for($i=0; $i<count($userids); $i+=1000) {

@@ -640,31 +640,104 @@ class core_completionlib_testcase extends advanced_testcase {
             ->method('get_tracked_users')
             ->with(false,  array(),  0,  '',  '',  '',  null)
             ->will($this->returnValue(array(
-                (object)array('id'=>100, 'firstname'=>'Woot', 'lastname'=>'Plugh'),
-                (object)array('id'=>201, 'firstname'=>'Vroom', 'lastname'=>'Xyzzy'))));
+                (object)array(
+                    'id' => 100,
+                    'firstname' => 'Woot',
+                    'lastname' => 'Plugh',
+                    'enrolmentstatus' => 0,
+                    'active_enrolment' => 0),
+                (object)array(
+                    'id' => 201,
+                    'firstname' => 'Vroom',
+                    'lastname' => 'Xyzzy',
+                    'enrolmentstatus' => 1,
+                    'active_enrolment' => 0),
+                (object)array(
+                    'id' => 302,
+                    'firstname' => 'Al',
+                    'lastname' => 'Bala',
+                    'enrolmentstatus' => 0,
+                    'active_enrolment' => 1),
+                (object)array(
+                    'id' => 403,
+                    'firstname' => 'Lily',
+                    'lastname' => 'Ri',
+                    'enrolmentstatus' => 1,
+                    'active_enrolment' => 1)
+            )));
         $DB->expects($this->at(0))
             ->method('get_in_or_equal')
-            ->with(array(100, 201))
-            ->will($this->returnValue(array(' IN (100, 201)', array())));
-        $progress1 = (object)array('userid'=>100, 'coursemoduleid'=>13);
-        $progress2 = (object)array('userid'=>201, 'coursemoduleid'=>14);
+            ->with(array(100, 201, 302, 403))
+            ->will($this->returnValue(array(' IN (100, 201, 302, 403)', array())));
+        $progress1 = (object)array('userid' => 100, 'coursemoduleid' => 13);
+        $progress2 = (object)array('userid' => 201, 'coursemoduleid' => 14);
+        $progress3 = (object)array('userid' => 302, 'coursemoduleid' => 15);
+        $progress4 = (object)array('userid' => 403, 'coursemoduleid' => 16);
         $DB->expects($this->at(1))
             ->method('get_recordset_sql')
-            ->will($this->returnValue(new core_completionlib_fake_recordset(array($progress1, $progress2))));
+            ->will($this->returnValue(new core_completionlib_fake_recordset(array(
+                $progress1,
+                $progress2,
+                $progress3,
+                $progress4
+            ))));
+
+        $tmp = $c->get_progress_all(false);
 
         $this->assertEquals(array(
-                100 => (object)array('id'=>100, 'firstname'=>'Woot', 'lastname'=>'Plugh',
-                    'progress'=>array(13=>$progress1)),
-                201 => (object)array('id'=>201, 'firstname'=>'Vroom', 'lastname'=>'Xyzzy',
-                    'progress'=>array(14=>$progress2)),
-            ), $c->get_progress_all(false));
+            100 => (object)array(
+                'id' => 100,
+                'firstname' => 'Woot',
+                'lastname' => 'Plugh',
+                'enrolmentstatus' => 0,
+                'active_enrolment' => 0,
+                'enrolmentstatus' => 'Not current',
+                'progress' => array(
+                    13 => $progress1
+                )),
+            201 => (object)array(
+                'id' => 201,
+                'firstname' => 'Vroom',
+                'lastname' => 'Xyzzy',
+                'enrolmentstatus' => 1,
+                'active_enrolment' => 0,
+                'enrolmentstatus' => 'Suspended',
+                'progress' => array(
+                    14 => $progress2
+                )),
+            302 => (object)array(
+                'id' => 302,
+                'firstname' => 'Al',
+                'lastname' => 'Bala',
+                'enrolmentstatus' => 0,
+                'active_enrolment' => 1,
+                'enrolmentstatus' => 'Active',
+                'progress' => array(
+                    15 => $progress3
+                )),
+            403 => (object)array(
+                'id' => 403,
+                'firstname' => 'Lily',
+                'lastname' => 'Ri',
+                'enrolmentstatus' => 1,
+                'active_enrolment' => 1,
+                'enrolmentstatus' => 'Suspended',
+                'progress' => array(
+                    16 => $progress4
+                )),
+            ), $tmp);
 
         // 2) With more than 1, 000 results.
         $tracked = array();
         $ids = array();
         $progress = array();
         for ($i = 100; $i<2000; $i++) {
-            $tracked[] = (object)array('id'=>$i, 'firstname'=>'frog', 'lastname'=>$i);
+            $tracked[] = (object)array(
+                'id' => $i,
+                'firstname' => 'frog',
+                'lastname' => $i,
+                'enrolmentstatus' => 1
+            );
             $ids[] = $i;
             $progress[] = (object)array('userid'=>$i, 'coursemoduleid'=>13);
             $progress[] = (object)array('userid'=>$i, 'coursemoduleid'=>14);
