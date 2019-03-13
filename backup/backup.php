@@ -122,7 +122,7 @@ if (!async_helper::is_async_pending($id, 'course', 'backup')) {
 
     if (!($bc = backup_ui::load_controller($backupid))) {
         $bc = new backup_controller($type, $id, backup::FORMAT_MOODLE,
-                backup::INTERACTIVE_YES, $backupmode, $USER->id);
+                backup::INTERACTIVE_YES, $backupmode, $USER->id, backup::RELEASESESSION_YES);
     }
 
     // Prepare a progress bar which can display optionally during long-running
