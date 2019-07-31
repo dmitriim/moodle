@@ -999,6 +999,7 @@ $string['courseduration_desc'] = 'The course duration is used to calculate the d
 $string['courseenddateenabled'] = 'Course end date enabled by default';
 $string['courseenddateenabled_desc'] = 'This setting determines if the course end date will be enabled by default for new courses and set to the date calculated from the course duration.';
 $string['eventcontentviewed'] = 'Content viewed';
+$string['eventscheduletaskupdated'] = 'chedule task updated';
 $string['filter'] = 'Filter';
 $string['filteroption'] = '{$a->criteria}: {$a->value}';
 $string['filters'] = 'Filters';
