@@ -152,7 +152,19 @@ class file_storage {
      * @return stored_file instance of file abstraction class
      */
     public function get_file_instance(stdClass $filerecord) {
-        $storedfile = new stored_file($this, $filerecord);
+        $classname = $filerecord->component . '\\files\\file';
+
+        if (class_exists($classname)) {
+            if (is_subclass_of($classname, \stored_file::class)) {
+                $storedfile = new $classname($this, $filerecord);
+            } else {
+                throw new coding_exception($classname . ' must extend stored_file');
+            }
+        } else {
+            debugging('Component ' . $filerecord->component . ' should implement a new file serving API!', DEBUG_DEVELOPER);
+            $storedfile = new stored_file($this, $filerecord);
+        }
+
         return $storedfile;
     }
 

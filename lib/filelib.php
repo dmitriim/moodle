@@ -4939,14 +4939,23 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             send_stored_file($file, null, 0, false, $sendfileoptions);
         }
 
-        $filefunction = $component.'_pluginfile';
-        $filefunctionold = $modname.'_pluginfile';
-        if (function_exists($filefunction)) {
-            // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
-            $filefunction($course, $cm, $context, $filearea, $args, $forcedownload, $sendfileoptions);
-        } else if (function_exists($filefunctionold)) {
-            // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
-            $filefunctionold($course, $cm, $context, $filearea, $args, $forcedownload, $sendfileoptions);
+
+        if ($serving = \core_files\serving::get_instance($component)) {
+            if (!$file = $serving->get_stored_file($contextid, $filearea, $args)) {
+                send_file_not_found();
+            }
+
+            $serving->serve($file, $forcedownload, $sendfileoptions);
+        } else {
+            $filefunction = $component.'_pluginfile';
+            $filefunctionold = $modname.'_pluginfile';
+            if (function_exists($filefunction)) {
+                // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
+                $filefunction($course, $cm, $context, $filearea, $args, $forcedownload, $sendfileoptions);
+            } else if (function_exists($filefunctionold)) {
+                // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
+                $filefunctionold($course, $cm, $context, $filearea, $args, $forcedownload, $sendfileoptions);
+            }
         }
 
         send_file_not_found();

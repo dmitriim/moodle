@@ -41,6 +41,12 @@ require_once($CFG->dirroot . '/lib/filestorage/file_system.php');
  * @since     Moodle 2.0
  */
 class stored_file {
+    const FILE_ACCESS_LEVEL_NONE = 'none';
+    const FILE_ACCESS_LEVEL_LOGIN = 'login';
+    const FILE_ACCESS_LEVEL_COURSE = 'course';
+    const FILE_ACCESS_LEVEL_MODULE = 'mod';
+    const FILE_ACCESS_LEVEL_ADMIN = 'admin';
+
     /** @var file_storage file storage pool instance */
     private $fs;
     /** @var stdClass record from the files table left join files_reference table */
@@ -648,6 +654,15 @@ class stored_file {
     }
 
     /**
+     * Returns context of the file
+     *
+     * @return bool|\context
+     */
+    public function get_context() {
+        return context::instance_by_id($this->get_contextid());
+    }
+
+    /**
      * Returns component name - this is the owner of the areas,
      * nothing else is allowed to read or modify the files directly!!
      *
@@ -1129,5 +1144,51 @@ class stored_file {
      */
     public function compare_to_string($content) {
         return $this->get_contenthash() === file_storage::hash_from_string($content);
+    }
+
+    /**
+     * Return login level required for accessing this file.
+     * @return string
+     */
+    public function get_login_level() {
+        return self::FILE_ACCESS_LEVEL_COURSE;
+    }
+
+    /**
+     * Can provided user access this file?
+     *
+     * @param object|null $user User object.
+     * @return bool
+     */
+    public function can_access($user = null) {
+        // By default users can't access files.
+        // This needs to be overridden on the component level.
+        return false;
+    }
+
+    public function get_full_path() {
+        return '/' . $this->get_contextid() . '/' . $this->get_component() . '/' . $this->get_filearea() . '/'
+            . $this->get_itemid() . $this->get_filepath();
+    }
+
+    /**
+     * Get file URL.
+     *
+     * @param bool $forcedownload Set to true if we need force download URL.
+     * @return \moodle_url
+     */
+    public function get_file_url($forcedownload = false): \moodle_url {
+        global $CFG;
+
+        $params = array();
+
+        if ($forcedownload) {
+            $params['forcedownload'] = 1;
+        }
+
+        $url = new moodle_url($CFG->wwwroot . '/pluginfile.php', $params);
+        $url->set_slashargument($this->get_full_path());
+
+        return $url;
     }
 }
