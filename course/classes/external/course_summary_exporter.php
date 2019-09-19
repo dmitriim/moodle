@@ -168,7 +168,21 @@ class course_summary_exporter extends \core\external\exporter {
      * @return string url of course image
      */
     public static function get_course_image($course) {
-        global $CFG;
+        // Allow any Moodle plugin to override a course image.
+        $callbacks = get_plugins_with_function('override_course_image');
+        foreach ($callbacks as $plugintype => $plugins) {
+            foreach ($plugins as $plugin => $callback) {
+                $result = $callback($course);
+                if ($result !== false) {
+                    if (!is_string($result)) {
+                        throw new \coding_exception('Callback "override_course_image" must return string!');
+                    }
+
+                    return $result;
+                }
+            }
+        }
+
         $courseinlist = new \core_course_list_element($course);
         foreach ($courseinlist->get_course_overviewfiles() as $file) {
             if ($file->is_valid_image()) {
