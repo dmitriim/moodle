@@ -34,6 +34,7 @@ list($options, $unrecognized) = cli_get_params(
         'help' => false,
         'showsql' => false,
         'showdebugging' => false,
+        'ignorelimits' => false,
     ], [
         'h' => 'help',
     ]
@@ -52,6 +53,7 @@ Options:
 --showsql             Show sql queries before they are executed
 --showdebugging       Show developer level debugging information
 --execute             Run all queued adhoc tasks
+--ignorelimits        Ignore task_adhoc_concurrency_limit and task_adhoc_max_runtime limits
 -h, --help            Print out this help
 
 Example:
@@ -106,12 +108,5 @@ $timenow = time();
 $humantimenow = date('r', $timenow);
 mtrace("Server Time: {$humantimenow}\n");
 
-// Run all adhoc tasks.
-$taskcount = 0;
-while (!\core\task\manager::static_caches_cleared_since($timenow) &&
-        $task = \core\task\manager::get_next_adhoc_task($timenow)) {
-    cron_run_inner_adhoc_task($task);
-    $taskcount++;
-    unset($task);
-}
-mtrace("Ran {$taskcount} adhoc tasks found at {$humantimenow}");
+$checklimits = empty($options['ignorelimits']);
+cron_run_adhoc_tasks($timenow, $checklimits);
