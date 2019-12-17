@@ -43,6 +43,9 @@ abstract class adhoc_task extends task_base {
     /** @var integer|null $userid - Adhoc tasks may choose to run as a specific user. */
     private $userid = null;
 
+    /** @var \core\lock\lock The concurrency task lock for this task. */
+    private $concurrencylock = null;
+
     /**
      * Setter for $id.
      * @param int|null $id
@@ -107,4 +110,51 @@ abstract class adhoc_task extends task_base {
         $this->userid = $userid;
     }
 
+    /**
+     * The default concurrency limit for this task.
+     *
+     * @return  int
+     */
+    protected function get_default_concurrency_limit() : int {
+        global $CFG;
+
+        if (isset($CFG->task_concurrency_limit_default)) {
+            return (int) $CFG->task_concurrency_limit_default;
+        }
+        return 0;
+    }
+
+    /**
+     * The effective concurrency limit for this task.
+     *
+     * @return  int
+     */
+    final public function get_concurrency_limit() : int {
+        global $CFG;
+
+        $classname = get_class($this);
+
+        if (isset($CFG->task_concurrency_limit[$classname])) {
+            return (int) $CFG->task_concurrency_limit[$classname];
+        }
+        return $this->get_default_concurrency_limit();
+    }
+
+    /**
+     * Set the concurrency task lock.
+     *
+     * @param   \core\lock\lock $lock
+     */
+    final public function set_concurrency_lock(\core\lock\lock $lock) : void {
+        $this->concurrencylock = $lock;
+    }
+
+    /**
+     * Release the concurrency lock for this task type.
+     */
+    final public function release_concurrency_lock() : void {
+        if ($this->concurrencylock) {
+            $this->concurrencylock->release();
+        }
+    }
 }
