@@ -1138,6 +1138,19 @@ class core_renderer extends renderer_base {
     }
 
     /**
+     * Secure login info.
+     *
+     * @return string
+     */
+    public function secure_login_info() {
+        if ($this->page->pagelayout === 'seb') {
+            return $this->login_info(false);
+        }
+
+        return '';
+    }
+
+    /**
      * Check whether the current page is a login page.
      *
      * @since Moodle 2.9

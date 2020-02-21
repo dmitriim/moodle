@@ -136,9 +136,15 @@ $THEME->layouts = [
         'regions' => array('side-pre'),
         'defaultregion' => 'side-pre',
     ),
-    // The pagelayout used for safebrowser and securewindow.
+    // The pagelayout used for securewindow.
     'secure' => array(
         'file' => 'secure.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre'
+    ),
+    // The pagelayout used for safe exam browser.
+    'seb' => array(
+        'file' => 'seb.php',
         'regions' => array('side-pre'),
         'defaultregion' => 'side-pre'
     )
