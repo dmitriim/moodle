@@ -2,6 +2,11 @@ This files describes API changes for quiz access rule plugins.
 
 Overview of this plugin type at http://docs.moodle.org/dev/Quiz_access_rules
 
+=== 3.9 ===
+
+* New prevent_review_access() method to let access rules to prevent access to
+  the attempt review page.
+
 === 2.8, 2.7.1, 2.6.4 and 2.5.7 ===
 
 * New static method delete_settings for access rules, which is called when a

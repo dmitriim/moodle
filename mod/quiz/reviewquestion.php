@@ -73,6 +73,13 @@ if ($attemptobj->is_own_attempt()) {
     throw new moodle_quiz_exception($attemptobj->get_quizobj(), 'noreviewattempt');
 }
 
+// Check the access rules.
+$messages = $accessmanager->prevent_review_access($attemptobj->get_attemptid());
+if (!$attemptobj->is_preview_user() && $messages) {
+    print_error('reviewerror', 'quiz', $attemptobj->view_url(),
+        $output->access_messages($messages));
+}
+
 // Prepare summary informat about this question attempt.
 $summarydata = array();
 

@@ -95,6 +95,17 @@ abstract class quiz_access_rule_base {
     }
 
     /**
+     * Whether the user should be blocked from accessing review attempt page.
+     *
+     * @param int $attemptid the id of the current attempt.
+     * @return string false if access should be allowed, a message explaining the
+     *      reason if access should be prevented.
+     */
+    public function prevent_review_access($attemptid) {
+        return false;
+    }
+
+    /**
      * @param int|null $attemptid the id of the current attempt, if there is one,
      *      otherwise null.
      * @return bool whether a check is required before the user starts/continues

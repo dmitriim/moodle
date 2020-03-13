@@ -1854,6 +1854,12 @@ class quiz_attempt {
             return false;
         }
 
+        if ($reviewing) {
+            if (!empty($this->get_access_manager(time())->prevent_review_access($this->get_attemptid()))) {
+                return false;
+            }
+        }
+
         return $this->quba->check_file_access($slot, $options,
                 $component, $filearea, $args, $forcedownload);
     }

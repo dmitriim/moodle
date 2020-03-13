@@ -667,6 +667,7 @@ $string['privacy:metadata:quiz_overrides:userid'] = 'The user being overridden';
 $string['privacy:metadata:quizaccess'] = 'The quiz activity makes use of quiz access rules.';
 $string['publish'] = 'Publish';
 $string['publishedit'] = 'You must have permission in the publishing course to add or edit questions in this category';
+$string['reviewerror'] = 'You are not allowed to review this quiz at this time because: {$a}';
 $string['qname'] = 'name';
 $string['qbrief'] = 'Q. {$a}';
 $string['qti'] = 'IMS QTI format';

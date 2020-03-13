@@ -346,6 +346,23 @@ class quiz_access_manager {
     }
 
     /**
+     * Whether the user should be blocked from accessing review attempt page.
+     * If there are any restrictions in force now, return an array
+     * of reasons why access should be blocked. If access is OK, return false.
+     *
+     * @param int $attemptid the id of the current attempt.
+     * @return mixed An array of reason why access is not allowed, or an empty array
+     *         (== false) if access should be allowed.
+     */
+    public function prevent_review_access(int $attemptid) {
+        $reasons = array();
+        foreach ($this->rules as $rule) {
+            $reasons = $this->accumulate_messages($reasons, $rule->prevent_review_access($attemptid));
+        }
+        return $reasons;
+    }
+
+    /**
      * @param int|null $attemptid the id of the current attempt, if there is one,
      *      otherwise null.
      * @return bool whether a check is required before the user starts/continues
@@ -531,7 +548,7 @@ class quiz_access_manager {
         $reviewoptions = mod_quiz_display_options::make_from_quiz(
                 $this->quizobj->get_quiz(), $when);
 
-        if (!$reviewoptions->attempt) {
+        if (!$reviewoptions->attempt || !empty($this->prevent_review_access($attempt->id))) {
             return $output->no_review_message($this->quizobj->cannot_review_message($when, true));
 
         } else {

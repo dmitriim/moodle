@@ -77,6 +77,15 @@ if ($attemptobj->is_own_attempt()) {
     throw new moodle_quiz_exception($attemptobj->get_quizobj(), 'noreviewattempt');
 }
 
+$output = $PAGE->get_renderer('mod_quiz');
+
+// Check the access rules.
+$messages = $accessmanager->prevent_review_access($attemptobj->get_attemptid());
+if (!$attemptobj->is_preview_user() && $messages) {
+    print_error('reviewerror', 'quiz', $attemptobj->view_url(),
+        $output->access_messages($messages));
+}
+
 // Load the questions and states needed by this page.
 if ($showall) {
     $questionids = $attemptobj->get_slots();
@@ -247,8 +256,6 @@ if ($showall) {
     $slots = $attemptobj->get_slots($page);
     $lastpage = $attemptobj->is_last_page($page);
 }
-
-$output = $PAGE->get_renderer('mod_quiz');
 
 // Arrange for the navigation to be displayed.
 $navbc = $attemptobj->get_navigation_panel($output, 'quiz_review_nav_panel', $page, $showall);
