@@ -2681,7 +2681,7 @@ class grade_item extends grade_object {
         }
 
         // The context here is used to get the sortorder config, which is at the site level.
-        return core\grade\rule::load_for_grade_item($id, context_system::instance());
+        return core\grade\rule::load_for_grade_item($id);
     }
 
     /**
