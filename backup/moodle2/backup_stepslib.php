@@ -1102,7 +1102,7 @@ class backup_gradebook_structure_step extends backup_structure_step {
 
         $this->add_plugin_structure('local', $grade_item, true);
         $graderules = new backup_nested_element('grade_rules');
-        $graderule = new backup_nested_element('grade_rule', ['id'], ['plugin', 'pluginid']);
+        $graderule = new backup_nested_element('grade_rule', ['id'], ['rulename', 'instanceid']);
 
         $grade_grades = new backup_nested_element('grade_grades');
         $grade_grade = new backup_nested_element('grade_grade', array('id'), array(
@@ -1172,7 +1172,7 @@ class backup_gradebook_structure_step extends backup_structure_step {
         $grade_items_params = array('courseid'=>backup::VAR_COURSEID);
         $grade_item->set_source_sql($grade_items_sql, $grade_items_params);
 
-        $graderule->set_source_table('grading_rules', array('gradeitem' => backup::VAR_PARENTID));
+        $graderule->set_source_table('grading_rules', array('gradeitemid' => backup::VAR_PARENTID));
 
         if ($userinfo) {
             $grade_grade->set_source_table('grade_grades', array('itemid' => backup::VAR_PARENTID));
@@ -2707,7 +2707,7 @@ class backup_activity_grades_structure_step extends backup_structure_step {
             'needsupdate', 'timecreated', 'timemodified'));
 
         $rules = new backup_nested_element('activity_grade_rules');
-        $rule = new backup_nested_element('activity_grade_rule', ['id'], ['plugin', 'pluginid']);
+        $rule = new backup_nested_element('activity_grade_rule', ['id'], ['rulename', 'instanceid']);
 
         $grades = new backup_nested_element('grade_grades');
 
@@ -2749,7 +2749,7 @@ class backup_activity_grades_structure_step extends backup_structure_step {
                                WHERE bi.backupid = ?
                                AND bi.itemname = 'grade_item'", array(backup::VAR_BACKUPID));
 
-        $rule->set_source_table('grading_rules', array('gradeitem' => backup::VAR_PARENTID));
+        $rule->set_source_table('grading_rules', array('gradeitemid' => backup::VAR_PARENTID));
 
         // This only happens if we are including user info
         if ($userinfo) {

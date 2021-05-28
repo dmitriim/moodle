@@ -273,13 +273,13 @@ class restore_gradebook_structure_step extends restore_structure_step {
         $data = (object)$data;
         $oldid = $data->id;
 
-        $data->gradeitem = $this->get_new_parentid('grade_item');
+        $data->gradeitemid = $this->get_new_parentid('grade_item');
 
         // Get the installed rules.
         $installedrules = \core\grade\rule::get_installed_rules();
 
         // Only restore the grading rules if the specific plugin is installed.
-        if (isset($installedrules[$data->plugin])) {
+        if (isset($installedrules[$data->rulename])) {
             $newitemid = $DB->insert_record('grading_rules', $data);
             $this->set_mapping('grade_rule', $oldid, $newitemid);
         }
