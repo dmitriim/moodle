@@ -785,7 +785,7 @@ class grade_category extends grade_object {
 
         if (!empty($rules)) {
             foreach ($rules as $rule) {
-                if ($rule->enabled()) {
+                if ($rule->is_enabled()) {
                     $finalgrade = $rule->final_grade_modifier($this->grade_item, $userid, $finalgrade);
                 }
             }
