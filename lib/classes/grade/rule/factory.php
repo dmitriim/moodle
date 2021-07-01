@@ -48,9 +48,12 @@ class factory implements factory_interface {
             throw new \coding_exception('The factory class does not exist');
         }
 
-        // TODO: Fix the check to see if the class is a factory_interface.
-        $method = new \ReflectionMethod($class, "create");
+        $rule = $class::create($rulename, $instanceid);
 
-        return $method->invokeArgs(null, [$rulename, $instanceid]);
+        if (!$rule instanceof rule_interface) {
+            throw new \coding_exception($class . ' must be of type rule_interface');
+        }
+
+        return $rule;
     }
 }
