@@ -41,6 +41,16 @@ use tool_dataprivacy\external;
 class tool_dataprivacy_external_testcase extends externallib_advanced_testcase {
 
     /**
+     * Tear down.
+     */
+    public function tearDown(): void {
+        global $SESSION;
+
+        $SESSION->notifications = [];
+        parent::tearDown();
+    }
+
+    /**
      * Test for external::approve_data_request() with the user not logged in.
      */
     public function test_approve_data_request_not_logged_in() {
