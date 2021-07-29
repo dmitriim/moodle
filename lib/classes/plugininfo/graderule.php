@@ -146,17 +146,15 @@ class graderule extends base {
             return;
         }
 
-        if (!$hassiteconfig) {
+        if (!$hassiteconfig || !file_exists($this->full_path('settings.php'))) {
             return;
         }
 
         $section = $this->get_settings_section_name();
 
-        $settings = null;
-        if (file_exists($this->full_path('settings.php'))) {
-            $settings = new \admin_settingpage($section, $this->displayname, 'moodle/site:config', $this->is_enabled() === false);
-            include($this->full_path('settings.php')); // This may also set $settings to null.
-        }
+        $settings = new \admin_settingpage($section, $this->displayname, 'moodle/site:config', $this->is_enabled() === false);
+        include($this->full_path('settings.php')); // This may also set $settings to null.
+
         if ($settings) {
             $ADMIN->add($parentnodename, $settings);
         }
