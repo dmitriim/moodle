@@ -208,7 +208,7 @@ if (has_capability('moodle/grade:manage', $systemcontext)
         $plugins = core_plugin_manager::instance()->get_plugins_of_type('graderule');
         foreach ($plugins as $plugin) {
             /** @var \core\plugininfo\graderule $plugin */
-            $plugin->load_settings($ADMIN, 'graderulessettings', $hassiteconfig);
+            $plugin->load_settings($ADMIN, 'graderules', $hassiteconfig);
         }
     }
 
