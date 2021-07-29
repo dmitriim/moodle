@@ -682,6 +682,25 @@ class grade_edit_tree {
                 $gradeitem->grademin, $gradeitem->grademax, 'gradebook');
         }
 
+        // Process any rules for this grade category.
+        $context = context_system::instance();
+        $rules = \core\grade\rule::load_for_grade_item($gradeitem->id, $context);
+
+        if (!empty($rules)) {
+            foreach ($rules as $rule) {
+                $rule->process_form($data);
+                $rule->save($gradeitem);
+
+                // Regrade if necessary.
+                if ($rule->needs_update()) {
+                    $gradeitem->force_regrading();
+                }
+
+                // Process recursive rules.
+                $rule->recurse($gradeitem);
+            }
+        }
+
         // Only update the category's 'hidden' status if it has changed. Leaving a category as 'unhidden' (checkbox left
         // unmarked) and submitting the form without this conditional check will result in displaying any grade items that
         // are in the category, including those that were previously 'hidden'.

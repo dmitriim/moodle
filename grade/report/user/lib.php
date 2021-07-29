@@ -572,9 +572,14 @@ class grade_report_user extends grade_report {
 
                         if ($this->canviewhidden) {
                             $gradeitemdata['graderaw'] = $gradeval;
-                            $data['grade']['content'] = grade_format_gradevalue($gradeval,
-                                                                                $grade_grade->grade_item,
-                                                                                true);
+                            $data['grade']['content'] = grade_format_gradevalue(
+                                $gradeval,
+                                $grade_grade->grade_item,
+                                true,
+                                null,
+                                null,
+                                $grade_grade->userid
+                            );
                         }
                     } else {
                         $gradestatusclass = '';
@@ -592,8 +597,14 @@ class grade_report_user extends grade_report {
                         }
 
                         $data['grade']['class'] = "{$class} {$gradestatusclass}";
-                        $data['grade']['content'] = $gradepassicon . grade_format_gradevalue($gradeval,
-                            $grade_grade->grade_item, true);
+                        $data['grade']['content'] = $gradepassicon . grade_format_gradevalue(
+                            $gradeval,
+                            $grade_grade->grade_item,
+                            true,
+                            null,
+                            null,
+                            $grade_grade->userid
+                        );
                         $gradeitemdata['graderaw'] = $gradeval;
                     }
                     $data['grade']['headers'] = "$header_cat $header_row grade";

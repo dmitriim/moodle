@@ -2879,5 +2879,30 @@ privatefiles,moodle|/user/files.php';
         upgrade_main_savepoint(true, 2022061500.00);
     }
 
+    if ($oldversion < 2022081200.01) {
+        // Define table grading_rules to be created.
+        $table = new xmldb_table('grading_rules');
+
+        // Adding fields to table grading_rules.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gradeitemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
+        $table->add_field('rulename', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null, 'gradeitemid');
+
+        // Adding keys to table grading_rules.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gradeitemid', XMLDB_KEY_FOREIGN, ['gradeitemid'], 'grade_items', ['id']);
+
+        // Adding indexes to table grading_rules.
+        $table->add_index('rulename', XMLDB_INDEX_NOTUNIQUE, ['rulename']);
+
+        // Conditionally launch create table for grading_rules.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2022081200.01);
+    }
+
     return true;
 }
