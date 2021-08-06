@@ -190,7 +190,7 @@ if ($mform->is_cancelled()) {
     }
 
     // Process hooks for the grade item.
-    $rules = rule_helper::load_for_grade_item($gradeitem->id);
+    $rules = rule_helper::get_rules_for_grade_item($gradeitem->id);
 
     if (!empty($rules)) {
         foreach ($rules as $rule) {

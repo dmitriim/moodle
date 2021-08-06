@@ -47,12 +47,12 @@ class rule_helper {
     }
 
     /**
-     * Load the rules for a grade item by ID.
+     * Returns the rules for a grade item by ID.
      *
      * @param int $gradeitemid
      * @return rule_interface[]
      */
-    public static function load_for_grade_item(int $gradeitemid): array {
+    public static function get_rules_for_grade_item(int $gradeitemid): array {
         global $DB;
 
         if ($gradeitemid === 0) {
@@ -72,7 +72,7 @@ class rule_helper {
                     // Handle clean-up issues where we delete the plugin but it does not clear the gradingrules table.
                     if (!empty($rule)) {
                         $rules[] = $rule;
-                        if ($rule->owned_by($gradeitemid)) {
+                        if ($rule->is_used_by_grade_item($gradeitemid)) {
                             $alreadyloaded[] = $rawrule->rulename;
                         }
                     }
@@ -87,13 +87,13 @@ class rule_helper {
     }
 
     /**
-     * Load rules for grade item by type.
+     * Returns the rule for a grade item by ID and type.
      *
      * @param int $gradeitemid
      * @param string $rulename
      * @return rule_interface[]
      */
-    public static function load_for_grade_item_by_type(int $gradeitemid, string $rulename): array {
+    public static function get_rules_for_grade_item_by_type(int $gradeitemid, string $rulename): array {
         global $DB;
 
         $rules = [];

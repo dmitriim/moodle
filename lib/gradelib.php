@@ -796,7 +796,7 @@ function grade_format_gradevalue(?float $value, &$grade_item, $localized = true,
     // Refactor this slightly to make it easier to manipulate.
     $formatreal = grade_format_gradevalue_real($value, $grade_item, $decimals, $localized);
     $formatpcnt = grade_format_gradevalue_percentage($value, $grade_item, $decimals, $localized);
-    $formatlttr = $grade_item->get_grade_symbol($value, $userid);
+    $formatlttr = $grade_item->get_grade_letter($value, $userid);
 
     switch ($displaytype) {
         case GRADE_DISPLAY_TYPE_REAL:

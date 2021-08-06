@@ -261,7 +261,7 @@ class edit_item_form extends moodleform {
         $mform =& $this->_form;
 
         // Process form hook rules for grade item.
-        $rules = rule_helper::load_for_grade_item($mform->getElementValue('id'));
+        $rules = rule_helper::get_rules_for_grade_item($mform->getElementValue('id'));
 
         if (!empty($rules)) {
             foreach ($rules as $rule) {

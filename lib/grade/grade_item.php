@@ -2691,7 +2691,7 @@ class grade_item extends grade_object {
         }
 
         // The context here is used to get the sortorder config, which is at the site level.
-        return rule_helper::load_for_grade_item($id);
+        return rule_helper::get_rules_for_grade_item($id);
     }
 
     /**
@@ -2708,7 +2708,7 @@ class grade_item extends grade_object {
 
         if (!empty($graderules)) {
             foreach ($graderules as $graderule) {
-                if ($graderule->is_enabled() && $graderule->owned_by($id)) {
+                if ($graderule->is_enabled() && $graderule->is_used_by_grade_item($id)) {
                     $rules[] = $graderule->get_type();
                 }
             }
@@ -2725,7 +2725,7 @@ class grade_item extends grade_object {
      *
      * @return string
      */
-    public function get_grade_symbol($value, $userid) {
+    public function get_grade_letter(string $value, ?int $userid): string {
         $standardsymbol = grade_format_gradevalue_letter($value, $this);
         $gradesymbol = $standardsymbol;
 
@@ -2738,7 +2738,7 @@ class grade_item extends grade_object {
         if (!empty($rules)) {
             foreach ($rules as $rule) {
                 if ($rule->is_enabled()) {
-                    $gradesymbol = $rule->symbol_modifier($this, $value, $userid, $standardsymbol);
+                    $gradesymbol = $rule->letter_modifier($this, $value, $userid, $standardsymbol);
                 }
             }
         }

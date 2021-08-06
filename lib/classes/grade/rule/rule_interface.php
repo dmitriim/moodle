@@ -55,7 +55,7 @@ interface rule_interface {
     public function final_grade_modifier(\grade_item &$item, int $userid, float $currentvalue): float;
 
     /**
-     * Modify symbol.
+     * Modify letter.
      *
      * @param \grade_item $item
      * @param float $value
@@ -63,7 +63,7 @@ interface rule_interface {
      * @param string $currentsymbol
      * @return string
      */
-    public function symbol_modifier(\grade_item &$item, float $value, int $userid, string $currentsymbol): string;
+    public function letter_modifier(\grade_item &$item, float $value, int $userid, string $currentsymbol): string;
 
     /**
      * Get the status message.
@@ -130,7 +130,7 @@ interface rule_interface {
      * @param int $itemid
      * @return bool
      */
-    public function owned_by(int $itemid): bool;
+    public function is_used_by_grade_item(int $itemid): bool;
 
     /**
      * Whether or not grade item needs updating.

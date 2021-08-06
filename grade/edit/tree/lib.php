@@ -685,7 +685,7 @@ class grade_edit_tree {
         }
 
         // Process any rules for this grade category.
-        $rules = rule_helper::load_for_grade_item($gradeitem->id);
+        $rules = rule_helper::get_rules_for_grade_item($gradeitem->id);
 
         if (!empty($rules)) {
             foreach ($rules as $rule) {
