@@ -2701,7 +2701,7 @@ class grade_item extends grade_object {
      *
      * @return array
      */
-    public static function get_active_grading_rules($id) {
+    public static function get_active_grading_rules(int $id): array {
         $rules = [];
 
         $graderules = self::get_rules($id);
