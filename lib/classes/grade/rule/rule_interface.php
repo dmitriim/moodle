@@ -66,15 +66,6 @@ interface rule_interface {
     public function letter_modifier(\grade_item &$item, float $value, int $userid, string $currentsymbol): string;
 
     /**
-     * Get the status message.
-     *
-     * @param \grade_item $item
-     * @param int $userid
-     * @return string
-     */
-    public function get_status_message(\grade_item &$item, int $userid): string;
-
-    /**
      * Edit the grade item edit form.
      *
      * @param MoodleQuickForm $mform

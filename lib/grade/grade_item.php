@@ -2745,28 +2745,4 @@ class grade_item extends grade_object {
 
         return $gradesymbol;
     }
-
-    /**
-     * Helper function to get the statuses associated with this grade item.
-     *
-     * @param int $userid
-     *
-     * @return array
-     */
-    public function get_statuses($userid) {
-        $statuses = [];
-
-        $graderules = self::get_rules($this->id);
-
-        if (!empty($graderules)) {
-            foreach ($graderules as $rule) {
-                $status = $rule->get_status_message($this, $userid);
-                if (!is_null($status)) {
-                    $statuses[] = $status;
-                }
-            }
-        }
-
-        return $statuses;
-    }
 }

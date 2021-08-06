@@ -834,48 +834,6 @@ function grade_format_gradevalue(?float $value, &$grade_item, $localized = true,
 }
 
 /**
- * Returns html string representation of icon with popover message if graderule is not met
- *
- * @param object $grade_item Grade item object passed by reference to prevent scale reloading
- * @param int $userid The ID of the user this grade belongs to
- * @return string
- */
-function grade_format_gradevalue_status(&$grade_item, $userid) {
-    // Get the statuses that apply to this grade value.
-    $statuses = [];
-
-    if (!is_null($userid)) {
-        $statuses = $grade_item->get_statuses($userid);
-    }
-
-    $formatted = '';
-
-    if (count($statuses) > 0) {
-        $messages = '';
-
-        foreach ($statuses as $status) {
-            $messages .= html_writer::tag('p', $status->get_lang_string()->out());
-        }
-
-        $attributes = array(
-            'tabindex'       => 0,
-            'data-placement' => 'right',
-            'data-container' => 'body',
-            'data-trigger'   => 'hover',
-            'data-toggle'    => 'popover',
-            'data-html'      => 'true',
-            'title'          => get_string('graderule_appliedrulespopuptitle', 'core_grades'),
-            'data-content'   => $messages,
-        );
-
-        $bellicon = html_writer::empty_tag('i', ['class' => 'icon fa fa-bell fa-fw', 'aria-hidden' => 'true']);
-        $formatted = html_writer::tag('a', $bellicon, $attributes);
-    }
-
-    return $formatted;
-}
-
-/**
  * Returns a float representation of a grade value
  *
  * @param float|null $value The grade value
