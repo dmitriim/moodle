@@ -42,7 +42,7 @@ abstract class restore_graderule_plugin extends restore_plugin {
      * @param int $instanceid The instance ID of the just restored grading rule plugin to point to.
      * @return void
      */
-    protected function adjust_grading_rule_record($id, $instanceid) {
+    protected function adjust_grading_rule_record(int $id, int $instanceid): void {
         global $DB;
 
         $DB->set_field('grading_rules', 'instanceid', $instanceid, ['id' => $id]);
