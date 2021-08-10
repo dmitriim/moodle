@@ -102,11 +102,11 @@ interface rule_interface {
     public function recurse(\grade_item &$currentgradeitem);
 
     /**
-     * Get the type.
+     * Get the name of the plugin.
      *
      * @return string
      */
-    public function get_type(): string;
+    public function get_name(): string;
 
     /**
      * Get the ID

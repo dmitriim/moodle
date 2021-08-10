@@ -2709,7 +2709,7 @@ class grade_item extends grade_object {
         if (!empty($graderules)) {
             foreach ($graderules as $graderule) {
                 if ($graderule->is_enabled() && $graderule->is_used_by_grade_item($id)) {
-                    $rules[] = $graderule->get_type();
+                    $rules[] = $graderule->get_name();
                 }
             }
         }

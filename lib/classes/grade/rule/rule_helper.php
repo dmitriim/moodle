@@ -179,8 +179,8 @@ class rule_helper {
         $order = self::get_enabled_rules();
 
         $comparator = function(rule_interface $a, rule_interface $b) use ($order) {
-            $valuea = array_search($a->get_type(), array_keys($order));
-            $valueb = array_search($b->get_type(), array_keys($order));
+            $valuea = array_search($a->get_name(), array_keys($order));
+            $valueb = array_search($b->get_name(), array_keys($order));
 
             if ($valuea < $valueb) {
                 return -1;
