@@ -112,26 +112,6 @@ class rule_helper {
     }
 
     /**
-     * Load blank rule.
-     *
-     * @param string[] $modulesloaded
-     * @return rule_interface[]
-     */
-    private static function load_blank_instances(array $modulesloaded = []): array {
-        $unloaded = array_diff(array_keys(self::get_enabled_rules()), $modulesloaded);
-
-        $blankmodules = [];
-
-        if (!empty($unloaded)) {
-            foreach ($unloaded as $modulename) {
-                $blankmodules[] = factory::create($modulename, -1);
-            }
-        }
-
-        return $blankmodules;
-    }
-
-    /**
      * Checks if a particular rule is used by a grade item.
      *
      * @param string $rulename
@@ -180,6 +160,26 @@ class rule_helper {
         global $DB;
 
         $DB->delete_records('grading_rules', ['rulename' => $rulename, 'instanceid' => $instanceid]);
+    }
+
+    /**
+     * Load blank rule.
+     *
+     * @param string[] $modulesloaded
+     * @return rule_interface[]
+     */
+    private static function load_blank_instances(array $modulesloaded = []): array {
+        $unloaded = array_diff(array_keys(self::get_enabled_rules()), $modulesloaded);
+
+        $blankmodules = [];
+
+        if (!empty($unloaded)) {
+            foreach ($unloaded as $modulename) {
+                $blankmodules[] = factory::create($modulename, -1);
+            }
+        }
+
+        return $blankmodules;
     }
 
     /**
