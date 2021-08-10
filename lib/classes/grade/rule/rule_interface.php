@@ -116,14 +116,6 @@ interface rule_interface {
     public function get_id(): int;
 
     /**
-     * Is the grading rule owned by grade item.
-     *
-     * @param int $itemid
-     * @return bool
-     */
-    public function is_used_by_grade_item(int $itemid): bool;
-
-    /**
      * Whether or not grade item needs updating.
      *
      * @return bool

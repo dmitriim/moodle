@@ -72,7 +72,7 @@ class rule_helper {
                     // Handle clean-up issues where we delete the plugin but it does not clear the gradingrules table.
                     if (!empty($rule)) {
                         $rules[] = $rule;
-                        if ($rule->is_used_by_grade_item($gradeitemid)) {
+                        if (rule_helper::is_used_by_grade_item($rule->get_name(), $gradeitemid)) {
                             $alreadyloaded[] = $rawrule->rulename;
                         }
                     }
@@ -129,6 +129,19 @@ class rule_helper {
         }
 
         return $blankmodules;
+    }
+
+    /**
+     * Checks if a particular rule is used by a grade item.
+     *
+     * @param string $rulename
+     * @param int $gradeitemid
+     * @return bool
+     */
+    public static function is_used_by_grade_item(string $rulename, int $gradeitemid): bool {
+        global $DB;
+
+        return $DB->record_exists('grading_rules', ['gradeitemid' => $gradeitemid, 'rulename' => $rulename]);
     }
 
     /**

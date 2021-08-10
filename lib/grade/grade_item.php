@@ -2708,7 +2708,7 @@ class grade_item extends grade_object {
 
         if (!empty($graderules)) {
             foreach ($graderules as $graderule) {
-                if ($graderule->is_enabled() && $graderule->is_used_by_grade_item($id)) {
+                if ($graderule->is_enabled() && rule_helper::is_used_by_grade_item($graderule->get_name(), $id)) {
                     $rules[] = $graderule->get_name();
                 }
             }
