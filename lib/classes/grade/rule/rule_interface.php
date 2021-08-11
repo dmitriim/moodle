@@ -38,6 +38,14 @@ use MoodleQuickForm;
 interface rule_interface {
 
     /**
+     * Handles instantiating a rule.
+     *
+     * @param int $instanceid
+     * @return rule_interface
+     */
+    public static function create(int $instanceid): rule_interface;
+
+    /**
      * Whether or not this rule is enabled.
      *
      * @return bool
