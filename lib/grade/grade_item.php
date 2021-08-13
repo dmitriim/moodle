@@ -2678,25 +2678,23 @@ class grade_item extends grade_object {
     /**
      * Helper function to get grading rules.
      *
-     * @param int $id This is the ID of the grade item
-     *
+     * @param int $gradeitemid
      * @return rule_interface[]
      */
-    public static function get_rules($id) {
+    public static function get_rules(int $gradeitemid): array {
         // Return an empty array if there are no grade rule plugin installed.
         if (count(rule_helper::get_enabled_rules()) === 0) {
             return [];
         }
 
         // The context here is used to get the sortorder config, which is at the site level.
-        return rule_helper::get_rules_for_grade_item($id);
+        return rule_helper::get_rules_for_grade_item($gradeitemid);
     }
 
     /**
      * Helper function to get active rules for this grade item
      *
      * @param int $id This is the ID of the grade item
-     *
      * @return array
      */
     public static function get_active_grading_rules(int $id): array {
@@ -2719,8 +2717,7 @@ class grade_item extends grade_object {
      * Helper function to get the grade symbol for this grade.
      *
      * @param string $value
-     * @param int    $userid
-     *
+     * @param int|null $userid
      * @return string
      */
     public function get_grade_letter(string $value, ?int $userid): string {
