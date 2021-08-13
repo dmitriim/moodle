@@ -285,7 +285,7 @@ class grade_item extends grade_object {
         self::set_properties($this, array('grademax' => $CFG->gradepointdefault));
         parent::__construct($params, $fetch);
         if (!empty($this->id)) {
-            $this->rules = self::get_active_grading_rules($this->id);
+            $this->rules = rule_helper::get_rules_for_grade_item($this);
         }
     }
 
@@ -379,7 +379,7 @@ class grade_item extends grade_object {
     public static function fetch($params) {
         $gradeitem = grade_object::fetch_helper('grade_items', 'grade_item', $params);
         if (!empty($gradeitem)) {
-            $gradeitem->rules = self::get_active_grading_rules($gradeitem->id);
+            $gradeitem->rules = rule_helper::get_rules_for_grade_item($gradeitem);
         }
         return $gradeitem;
     }
@@ -424,7 +424,7 @@ class grade_item extends grade_object {
 
         if (!empty($gradeitems)) {
             foreach ($gradeitems as $gradeitem) {
-                $gradeitem->rules = self::get_active_grading_rules($gradeitem->id);
+                $gradeitem->rules = rule_helper::get_rules_for_grade_item($gradeitem);
             }
         }
 
@@ -444,12 +444,10 @@ class grade_item extends grade_object {
         $this->delete_all_grades($source);
 
         // Process installed rules here.
-        $installedrules = rule_helper::get_enabled_rules();
-
-        if (!empty($installedrules)) {
-            foreach ($installedrules as $installedrule) {
-                $rule = factory::create($installedrule, -1);
-                $rule->delete($this);
+        $usedrules = rule_helper::get_rules_for_grade_item($this, true);
+        if (!empty($usedrules)) {
+            foreach ($usedrules as $rule) {
+                $rule->delete();
             }
         }
 
@@ -935,12 +933,12 @@ class grade_item extends grade_object {
             $rawgrade += $this->plusfactor;
 
             // Pass the grade item and the grade value through the installed grading rule plugins here.
-            $rules = self::get_rules($this->id);
+            $rules = rule_helper::get_rules_for_grade_item($this);
             if (!empty($rules)) {
                 foreach ($rules as $rule) {
                     if ($rule->is_enabled()) {
                         if (!is_null($userid)) {
-                            $rawgrade = $rule->final_grade_modifier($this, $userid, $rawgrade);
+                            $rawgrade = $rule->final_grade_modifier($userid, $rawgrade);
                         }
                     }
                 }
@@ -969,15 +967,13 @@ class grade_item extends grade_object {
                 $rawgrade = grade_grade::standardise_score($rawgrade, $rawmin, $rawmax, $this->grademin, $this->grademax);
             }
 
-            // Pass the grade item and the grade value through the installed
-            // grading rule plugins here.
-            $rules = self::get_rules($this->courseid, $this->id);
-
+            // Pass the grade item and the grade value through the installed grading rule plugins here.
+            $rules = rule_helper::get_rules_for_grade_item($this);
             if (!empty($rules)) {
                 foreach ($rules as $rule) {
                     if ($rule->is_enabled()) {
                         if (!is_null($userid)) {
-                            $rawgrade = $rule->final_grade_modifier($this, $userid, $rawgrade);
+                            $rawgrade = $rule->final_grade_modifier($userid, $rawgrade);
                         }
                     }
                 }
@@ -1617,7 +1613,7 @@ class grade_item extends grade_object {
         $this->parent_category =& $parent_category;
 
         // Handle recurse rules if/when we move items.
-        $rules = self::get_rules($this->id);
+        $rules = rule_helper::get_rules_for_grade_item($this);
         if (!empty($rules)) {
             foreach ($rules as $rule) {
                 $rule->recurse($this);
@@ -1916,15 +1912,13 @@ class grade_item extends grade_object {
                 $grade->overridden = time();
             }
 
-            // Pass the grade item and the grade value through the installed
-            // grading rule plugins here.
-            $rules = self::get_rules($this->courseid, $this->id);
-
+            // Pass the grade item and the grade value through the installed grading rule plugins here.
+            $rules = rule_helper::get_rules_for_grade_item($this);
             if (!empty($rules)) {
                 foreach ($rules as $rule) {
                     if ($rule->is_enabled()) {
                         if (!is_null($userid)) {
-                            $finalgrade = $rule->final_grade_modifier($this, $userid, $finalgrade);
+                            $finalgrade = $rule->final_grade_modifier($userid, $finalgrade);
                         }
                     }
                 }
@@ -2676,44 +2670,6 @@ class grade_item extends grade_object {
     }
 
     /**
-     * Helper function to get grading rules.
-     *
-     * @param int $gradeitemid
-     * @return rule_interface[]
-     */
-    public static function get_rules(int $gradeitemid): array {
-        // Return an empty array if there are no grade rule plugin installed.
-        if (count(rule_helper::get_enabled_rules()) === 0) {
-            return [];
-        }
-
-        // The context here is used to get the sortorder config, which is at the site level.
-        return rule_helper::get_rules_for_grade_item($gradeitemid);
-    }
-
-    /**
-     * Helper function to get active rules for this grade item
-     *
-     * @param int $id This is the ID of the grade item
-     * @return array
-     */
-    public static function get_active_grading_rules(int $id): array {
-        $rules = [];
-
-        $graderules = self::get_rules($id);
-
-        if (!empty($graderules)) {
-            foreach ($graderules as $graderule) {
-                if ($graderule->is_enabled() && rule_helper::is_used_by_grade_item($graderule->get_name(), $id)) {
-                    $rules[] = $graderule->get_name();
-                }
-            }
-        }
-
-        return $rules;
-    }
-
-    /**
      * Helper function to get the grade symbol for this grade.
      *
      * @param string $value
@@ -2728,12 +2684,11 @@ class grade_item extends grade_object {
             return $standardsymbol;
         }
 
-        $rules = self::get_rules($this->id);
-
+        $rules = rule_helper::get_rules_for_grade_item($this);
         if (!empty($rules)) {
             foreach ($rules as $rule) {
                 if ($rule->is_enabled()) {
-                    $gradesymbol = $rule->letter_modifier($this, $value, $userid, $standardsymbol);
+                    $gradesymbol = $rule->letter_modifier($value, $userid, $standardsymbol);
                 }
             }
         }

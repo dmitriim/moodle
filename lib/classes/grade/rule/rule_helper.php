@@ -38,7 +38,7 @@ use core\plugininfo\graderule;
 class rule_helper {
 
     /**
-     * Get all enabled rules.
+     * Get all enabled rule names.
      *
      * @return string[]
      */
@@ -49,64 +49,38 @@ class rule_helper {
     /**
      * Returns the rules for a grade item by ID.
      *
-     * @param int $gradeitemid
+     * @param \grade_item|null $gradeitem
+     * @param bool $onlyactive True if we only want to return rules that have been applied, or false to show all that can be used.
      * @return rule_interface[]
      */
-    public static function get_rules_for_grade_item(int $gradeitemid): array {
+    public static function get_rules_for_grade_item(?\grade_item $gradeitem, bool $onlyactive = false): array {
         global $DB;
 
-        if ($gradeitemid === 0) {
-            return self::load_blank_instances();
+        if (is_null($gradeitem)) {
+            return self::get_blank_grade_rule_instances([]);
         }
 
-        $rawrules = $DB->get_records('grading_rules', ['gradeitemid' => $gradeitemid]);
+        $rawrules = $DB->get_records('grading_rules', ['gradeitemid' => $gradeitem->id]);
         $rules = [];
-        $alreadyloaded = [];
+        $rulesinuse = [];
 
         if (!empty($rawrules)) {
             foreach ($rawrules as $rawrule) {
-                // Only do this if the graderule plugin is installed.
                 if (array_key_exists($rawrule->rulename, self::get_enabled_rules())) {
-                    $rule = factory::create($rawrule->rulename, $rawrule->id);
-
-                    // Handle clean-up issues where we delete the plugin but it does not clear the gradingrules table.
-                    if (!empty($rule)) {
+                    if (self::is_used_by_grade_item($gradeitem->id, $rawrule->rulename)) {
+                        $rule = factory::create($rawrule->rulename, $gradeitem, $rawrule->id);
                         $rules[] = $rule;
-                        if (rule_helper::is_used_by_grade_item($rule->get_name(), $gradeitemid)) {
-                            $alreadyloaded[] = $rawrule->rulename;
-                        }
+                        $rulesinuse[] = $rule->get_name();
                     }
                 }
             }
         }
 
-        $rules = array_merge($rules, self::load_blank_instances($alreadyloaded));
-        self::sort_rules($rules);
-
-        return $rules;
-    }
-
-    /**
-     * Returns the rule for a grade item by ID and type.
-     *
-     * @param int $gradeitemid
-     * @param string $rulename
-     * @return rule_interface[]
-     */
-    public static function get_rules_for_grade_item_by_type(int $gradeitemid, string $rulename): array {
-        global $DB;
-
-        $rules = [];
-        $rawrules = $DB->get_records('grading_rules', ['gradeitemid' => $gradeitemid, 'rulename' => $rulename]);
-
-        if (!empty($rawrules)) {
-            foreach ($rawrules as $rawrule) {
-                $rule = factory::create($rawrule->rulename, $rawrule->id);
-                if (!empty($rule)) {
-                    $rules[] = $rule;
-                }
-            }
+        if (!$onlyactive) {
+            $rules = array_merge($rules, self::get_blank_grade_rule_instances($rulesinuse));
         }
+
+        self::sort_rules($rules);
 
         return $rules;
     }
@@ -114,34 +88,31 @@ class rule_helper {
     /**
      * Checks if a particular rule is used by a grade item.
      *
-     * @param string $rulename The name of the rule
-     * @param int $gradingruleid The id in the grading_rules table
+     * @param int $gradeitemid
+     * @param string $rulename
      * @return bool
      */
-    public static function is_used_by_grade_item(string $rulename, int $gradeitemid): bool {
+    public static function is_used_by_grade_item(int $gradeitemid, string $rulename): bool {
         global $DB;
 
-        return $DB->record_exists('grading_rules', ['rulename' => $rulename, 'gradeitemid' => $gradeitemid]);
+        return $DB->record_exists('grading_rules', ['gradeitemid' => $gradeitemid, 'rulename' => $rulename]);
     }
 
     /**
      * Save a rule association.
      *
-     * @param string $rulename
      * @param int $gradeitemid
-     * @return void
+     * @param string $rulename
+     * @return int The id in the grading_rules table
      */
-    public static function save_rule_association(string $rulename, int $gradeitemid): void {
+    public static function save_rule_association(int $gradeitemid, string $rulename): int {
         global $DB;
 
-        $ruleexists = $DB->record_exists('grading_rules', ['rulename' => $rulename, 'gradeitemid' => $gradeitemid]);
+        $record = new \stdClass();
+        $record->gradeitemid = $gradeitemid;
+        $record->rulename = $rulename;
 
-        if (!$ruleexists) {
-            $record = new \stdClass();
-            $record->gradeitemid = $gradeitemid;
-            $record->rulename = $rulename;
-            $DB->insert_record('grading_rules', $record);
-        }
+        return $DB->insert_record('grading_rules', $record);
     }
 
     /**
@@ -157,23 +128,22 @@ class rule_helper {
     }
 
     /**
-     * Load blank rule.
+     * Load blank instances of said rules.
      *
-     * @param string[] $modulesloaded
-     * @return rule_interface[]
+     * @param array $rulesinuse The rules in use
+     * @return array
      */
-    private static function load_blank_instances(array $modulesloaded = []): array {
-        $unloaded = array_diff(array_keys(self::get_enabled_rules()), $modulesloaded);
+    private static function get_blank_grade_rule_instances(array $rulesinuse): array {
+        $rulesnotinuse = array_diff(array_keys(self::get_enabled_rules()), $rulesinuse);
 
-        $blankmodules = [];
-
-        if (!empty($unloaded)) {
-            foreach ($unloaded as $modulename) {
-                $blankmodules[] = factory::create($modulename, -1);
+        $blankrules = [];
+        if (!empty($rulesnotinuse)) {
+            foreach ($rulesnotinuse as $rulename) {
+                $blankrules[] = factory::create($rulename, null, null);
             }
         }
 
-        return $blankmodules;
+        return $blankrules;
     }
 
     /**

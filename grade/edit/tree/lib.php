@@ -692,12 +692,11 @@ class grade_edit_tree {
         }
 
         // Process any rules for this grade category.
-        $rules = rule_helper::get_rules_for_grade_item($gradeitem->id);
-
+        $rules = rule_helper::get_rules_for_grade_item($gradeitem);
         if (!empty($rules)) {
             foreach ($rules as $rule) {
-                $rule->process_form($data);
-                $rule->save($gradeitem);
+                $rule->process_form($gradeitem, $data);
+                $rule->save();
 
                 // Regrade if necessary.
                 if ($rule->needs_update()) {
@@ -705,7 +704,7 @@ class grade_edit_tree {
                 }
 
                 // Process recursive rules.
-                $rule->recurse($gradeitem);
+                $rule->recurse();
             }
         }
 

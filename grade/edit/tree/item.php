@@ -190,12 +190,12 @@ if ($mform->is_cancelled()) {
     }
 
     // Process hooks for the grade item.
-    $rules = rule_helper::get_rules_for_grade_item($gradeitem->id);
+    $rules = rule_helper::get_rules_for_grade_item($gradeitem);
 
     if (!empty($rules)) {
         foreach ($rules as $rule) {
-            $rule->process_form($data);
-            $rule->save($gradeitem);
+            $rule->process_form($gradeitem, $data);
+            $rule->save();
 
             // Regrade if necessary.
             if ($rule->needs_update()) {
@@ -215,7 +215,7 @@ if ($mform->is_cancelled()) {
     // Process recursive rules.
     if (!empty($rules)) {
         foreach ($rules as $rule) {
-            $rule->recurse($gradeitem);
+            $rule->recurse();
         }
     }
 

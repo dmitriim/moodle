@@ -40,10 +40,18 @@ interface rule_interface {
     /**
      * Handles instantiating a rule.
      *
-     * @param int $id The id in the grading_rules table
+     * @param \grade_item|null $gradeitem The grade_item object, null if it has not been created yet
+     * @param int|null $gradingruleid The id in the grading_rules table, null if it has not been created yet
      * @return rule_interface
      */
-    public static function create(int $id): rule_interface;
+    public static function create(?\grade_item $gradeitem, ?int $gradingruleid): rule_interface;
+
+    /**
+     * Get the name of the plugin.
+     *
+     * @return string
+     */
+    public function get_name(): string;
 
     /**
      * Whether or not this rule is enabled.
@@ -55,73 +63,59 @@ interface rule_interface {
     /**
      * Modify final grade.
      *
-     * @param \grade_item $item
      * @param int $userid
      * @param float $currentvalue
      * @return float
      */
-    public function final_grade_modifier(\grade_item &$item, int $userid, float $currentvalue): float;
+    public function final_grade_modifier(int $userid, float $currentvalue): float;
 
     /**
      * Modify letter.
      *
-     * @param \grade_item $item
      * @param float $value
      * @param int $userid
-     * @param string $currentsymbol
+     * @param string $currentletter
      * @return string
      */
-    public function letter_modifier(\grade_item &$item, float $value, int $userid, string $currentsymbol): string;
+    public function letter_modifier(float $value, int $userid, string $currentletter): string;
 
     /**
      * Edit the grade item edit form.
      *
      * @param MoodleQuickForm $mform
+     * @return void
      */
-    public function edit_form_hook(MoodleQuickForm &$mform);
+    public function edit_form_hook(MoodleQuickForm &$mform): void;
 
     /**
      * Process the form.
      *
+     * @param \grade_item $gradeitem
      * @param \stdClass $data
+     * @return void
      */
-    public function process_form(\stdClass &$data);
+    public function process_form(\grade_item $gradeitem, \stdClass &$data): void;
 
     /**
-     * Save the grade item.
+     * Save the grade rule.
      *
-     * @param \grade_item $gradeitem
-     * @return mixed
+     * @return void
      */
-    public function save(\grade_item &$gradeitem);
+    public function save(): void;
 
     /**
-     * Delete the grade item.
+     * Delete the grade rule.
      *
-     * @param \grade_item $gradeitem
+     * @return void
      */
-    public function delete(\grade_item &$gradeitem);
+    public function delete(): void;
 
     /**
      * Process the grade item recursively.
      *
-     * @param \grade_item $currentgradeitem
+     * @return void
      */
-    public function recurse(\grade_item &$currentgradeitem);
-
-    /**
-     * Get the name of the plugin.
-     *
-     * @return string
-     */
-    public function get_name(): string;
-
-    /**
-     * Get the ID
-     *
-     * @return int
-     */
-    public function get_id(): int;
+    public function recurse(): void;
 
     /**
      * Whether or not grade item needs updating.

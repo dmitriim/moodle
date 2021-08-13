@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\grade\rule\rule_helper;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/grade_object.php');
@@ -779,14 +781,12 @@ class grade_category extends grade_object {
         // Recalculate the grade back to requested range.
         $finalgrade = grade_grade::standardise_score($agg_grade, 0, 1, $result['grademin'], $result['grademax']);
 
-        // Pass the grade item and the grade value through the installed
-        // grading rule plugins here.
-        $rules = $this->grade_item::get_rules($this->grade_item->id);
-
+        // Pass the grade item and the grade value through the installed grading rule plugins here.
+        $rules = rule_helper::get_rules_for_grade_item($this->grade_item);
         if (!empty($rules)) {
             foreach ($rules as $rule) {
                 if ($rule->is_enabled()) {
-                    $finalgrade = $rule->final_grade_modifier($this->grade_item, $userid, $finalgrade);
+                    $finalgrade = $rule->final_grade_modifier($userid, $finalgrade);
                 }
             }
         }

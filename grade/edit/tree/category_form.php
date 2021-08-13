@@ -307,11 +307,11 @@ class edit_category_form extends moodleform {
         // Process form hook rules for this grade category.
         $gradeitemid = $mform->getElementValue('id');
 
+        $rules = [];
         if ($gradeitemid != 0) {
-            $gradeitemid = grade_category::fetch(['id' => $gradeitemid])->get_grade_item()->id;
+            $gradeitem = grade_category::fetch(['id' => $gradeitemid])->get_grade_item();
+            $rules = rule_helper::get_rules_for_grade_item($gradeitem);
         }
-
-        $rules = rule_helper::get_rules_for_grade_item($gradeitemid);
 
         if (!empty($rules)) {
             foreach ($rules as $rule) {

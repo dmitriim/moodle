@@ -260,9 +260,16 @@ class edit_item_form extends moodleform {
 
         $mform =& $this->_form;
 
-        // Process form hook rules for grade item.
-        $rules = rule_helper::get_rules_for_grade_item($mform->getElementValue('id'));
+        $itemtopass = null;
+        if ($id = $mform->getElementValue('id')) {
+            $gradeitem = grade_item::fetch(array('id' => $id));
+            if ($gradeitem) {
+                $itemtopass = $gradeitem;
+            }
+        }
 
+        // Process form hook rules for grade item.
+        $rules = rule_helper::get_rules_for_grade_item($itemtopass);
         if (!empty($rules)) {
             foreach ($rules as $rule) {
                 $rule->edit_form_hook($mform);
@@ -270,7 +277,6 @@ class edit_item_form extends moodleform {
         }
 
         if ($id = $mform->getElementValue('id')) {
-            $gradeitem = grade_item::fetch(array('id' => $id));
             $parentcategory = $gradeitem->get_parent_category();
         } else {
             // If we do not have an id, we are creating a new grade item.
