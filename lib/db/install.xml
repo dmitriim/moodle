@@ -3854,7 +3854,6 @@
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
             <FIELD NAME="gradeitemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Link to the grade item that the rules applies to."/>
             <FIELD NAME="rulename" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="The name of the rule."/>
-            <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The instanceid for the rule."/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -3862,7 +3861,6 @@
         </KEYS>
         <INDEXES>
             <INDEX NAME="rulename" UNIQUE="false" FIELDS="rulename"/>
-            <INDEX NAME="instanceid" UNIQUE="false" FIELDS="instanceid"/>
         </INDEXES>
     </TABLE>
     <TABLE NAME="oauth2_endpoint" COMMENT="Describes the named endpoint for an oauth2 service.">

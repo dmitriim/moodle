@@ -36,9 +36,9 @@ interface factory_interface {
     /**
      * Create rule_interface.
      *
-     * @param string $rulename
-     * @param int $instanceid
+     * @param string $rulename The name of the rule
+     * @param int $gradingruleid The id in the grading_rules table
      * @return rule_interface
      */
-    public static function create(string $rulename, int $instanceid): rule_interface;
+    public static function create(string $rulename, int $gradingruleid): rule_interface;
 }

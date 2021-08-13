@@ -40,10 +40,10 @@ interface rule_interface {
     /**
      * Handles instantiating a rule.
      *
-     * @param int $instanceid
+     * @param int $id The id in the grading_rules table
      * @return rule_interface
      */
-    public static function create(int $instanceid): rule_interface;
+    public static function create(int $id): rule_interface;
 
     /**
      * Whether or not this rule is enabled.

@@ -36,11 +36,11 @@ class factory implements factory_interface {
     /**
      * Create a new rule_interface.
      *
-     * @param string $rulename
-     * @param int $instanceid
+     * @param string $rulename The name of the rule
+     * @param int $gradingruleid The id in the grading_rules table
      * @return rule_interface
      */
-    public static function create(string $rulename, int $instanceid): rule_interface {
+    public static function create(string $rulename, int $gradingruleid): rule_interface {
         $class = "\\graderule_$rulename\\rule";
 
         // Check to see if class exists.
@@ -48,7 +48,7 @@ class factory implements factory_interface {
             throw new \coding_exception('The rule class does not exist');
         }
 
-        $rule = $class::create($instanceid);
+        $rule = $class::create($gradingruleid);
 
         if (!$rule instanceof rule_interface) {
             throw new \coding_exception($class . ' must be of type rule_interface');

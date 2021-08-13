@@ -34,17 +34,5 @@ defined('MOODLE_INTERNAL') || die();
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class restore_graderule_plugin extends restore_plugin {
-
-    /**
-     * Adjust the grading_rules record to point to the just restored plugin information.
-     *
-     * @param int $id         The ID of the grading_rules records to adjust.
-     * @param int $instanceid The instance ID of the just restored grading rule plugin to point to.
-     * @return void
-     */
-    protected function adjust_grading_rule_record(int $id, int $instanceid): void {
-        global $DB;
-
-        $DB->set_field('grading_rules', 'instanceid', $instanceid, ['id' => $id]);
-    }
+    // Use default parent behaviour.
 }

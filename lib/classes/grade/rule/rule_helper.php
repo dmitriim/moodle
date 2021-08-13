@@ -67,7 +67,7 @@ class rule_helper {
             foreach ($rawrules as $rawrule) {
                 // Only do this if the graderule plugin is installed.
                 if (array_key_exists($rawrule->rulename, self::get_enabled_rules())) {
-                    $rule = factory::create($rawrule->rulename, $rawrule->instanceid);
+                    $rule = factory::create($rawrule->rulename, $rawrule->id);
 
                     // Handle clean-up issues where we delete the plugin but it does not clear the gradingrules table.
                     if (!empty($rule)) {
@@ -101,7 +101,7 @@ class rule_helper {
 
         if (!empty($rawrules)) {
             foreach ($rawrules as $rawrule) {
-                $rule = factory::create($rawrule->rulename, $rawrule->instanceid);
+                $rule = factory::create($rawrule->rulename, $rawrule->id);
                 if (!empty($rule)) {
                     $rules[] = $rule;
                 }
@@ -114,37 +114,32 @@ class rule_helper {
     /**
      * Checks if a particular rule is used by a grade item.
      *
-     * @param string $rulename
-     * @param int $gradeitemid
+     * @param string $rulename The name of the rule
+     * @param int $gradingruleid The id in the grading_rules table
      * @return bool
      */
     public static function is_used_by_grade_item(string $rulename, int $gradeitemid): bool {
         global $DB;
 
-        return $DB->record_exists('grading_rules', ['gradeitemid' => $gradeitemid, 'rulename' => $rulename]);
+        return $DB->record_exists('grading_rules', ['rulename' => $rulename, 'gradeitemid' => $gradeitemid]);
     }
 
     /**
      * Save a rule association.
      *
-     * @param int $gradeitemid
      * @param string $rulename
-     * @param int $instanceid
+     * @param int $gradeitemid
      * @return void
      */
-    public static function save_rule_association(int $gradeitemid, string $rulename, int $instanceid): void {
+    public static function save_rule_association(string $rulename, int $gradeitemid): void {
         global $DB;
 
-        $ruleexists = $DB->record_exists(
-            'grading_rules',
-            ['gradeitemid' => $gradeitemid, 'rulename' => $rulename, 'instanceid' => $instanceid]
-        );
+        $ruleexists = $DB->record_exists('grading_rules', ['rulename' => $rulename, 'gradeitemid' => $gradeitemid]);
 
         if (!$ruleexists) {
             $record = new \stdClass();
             $record->gradeitemid = $gradeitemid;
             $record->rulename = $rulename;
-            $record->instanceid  = $instanceid;
             $DB->insert_record('grading_rules', $record);
         }
     }
@@ -152,14 +147,13 @@ class rule_helper {
     /**
      * Delete a rule association.
      *
-     * @param string $rulename
-     * @param int $instanceid
+     * @param int $gradingruleid The id in the grading_rules table
      * @return void
      */
-    public static function delete_rule_association($rulename, $instanceid): void {
+    public static function delete_rule_association(int $gradingruleid): void {
         global $DB;
 
-        $DB->delete_records('grading_rules', ['rulename' => $rulename, 'instanceid' => $instanceid]);
+        $DB->delete_records('grading_rules', ['id' => $gradingruleid]);
     }
 
     /**
