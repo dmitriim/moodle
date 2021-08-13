@@ -934,10 +934,8 @@ class grade_item extends grade_object {
             $rawgrade *= $this->multfactor;
             $rawgrade += $this->plusfactor;
 
-            // Pass the grade item and the grade value through the installed
-            // grading rule plugins here.
-            $rules = self::get_rules($this->courseid, $this->id);
-
+            // Pass the grade item and the grade value through the installed grading rule plugins here.
+            $rules = self::get_rules($this->id);
             if (!empty($rules)) {
                 foreach ($rules as $rule) {
                     if ($rule->is_enabled()) {
