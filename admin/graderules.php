@@ -41,7 +41,7 @@ $plugins = core_plugin_manager::instance()->get_plugins_of_type('graderule');
 $sortorder = array_flip(array_keys($plugins));
 
 if (!isset($plugins[$name])) {
-    print_error('gradingrulenotfound', 'error', $return, $name);
+    throw new moodle_exception('gradingrulenotfound', 'error', $return, $name);
 }
 
 switch ($action) {
