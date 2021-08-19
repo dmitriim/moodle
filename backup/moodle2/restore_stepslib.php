@@ -3961,8 +3961,8 @@ class restore_activity_grades_structure_step extends restore_structure_step {
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('grade_item', '/activity_gradebook/grade_items/grade_item');
-        $graderule = new restore_path_element('activity_grade_rule',
-            '/activity_gradebook/grade_items/grade_item/activity_grade_rules/activity_grade_rule');
+        $graderule = new restore_path_element('grade_rule',
+            '/activity_gradebook/grade_items/grade_item/grade_rules/grade_rule');
         $paths[] = $graderule;
 
         if ($userinfo) {
@@ -4044,21 +4044,21 @@ class restore_activity_grades_structure_step extends restore_structure_step {
      *
      * @param array $data Restore data.
      */
-    protected function process_activity_grade_rule($data) {
+    protected function process_grade_rule($data) {
         global $DB;
 
         $data = (object)$data;
         $oldid = $data->id;
 
-        $data->gradeitem = $this->get_new_parentid('grade_item');
+        $data->gradeitemid = $this->get_new_parentid('grade_item');
 
         // Get the installed rules.
         $installedrules = rule_helper::get_enabled_rules();
 
         // Only restore the grading rules if the specific plugin is installed.
-        if (isset($installedrules[$data->plugin])) {
+        if (isset($installedrules[$data->rulename])) {
             $newitemid = $DB->insert_record('grading_rules', $data);
-            $this->set_mapping('activity_grade_rule', $oldid, $newitemid);
+            $this->set_mapping('grade_rule', $oldid, $newitemid);
         }
     }
 

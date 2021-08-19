@@ -1102,7 +1102,7 @@ class backup_gradebook_structure_step extends backup_structure_step {
 
         $this->add_plugin_structure('local', $grade_item, true);
         $graderules = new backup_nested_element('grade_rules');
-        $graderule = new backup_nested_element('grade_rule', ['id'], ['rulename']);
+        $graderule = new backup_nested_element('grade_rule', ['id'], ['gradeitemid', 'rulename']);
 
         $grade_grades = new backup_nested_element('grade_grades');
         $grade_grade = new backup_nested_element('grade_grade', array('id'), array(
@@ -2706,8 +2706,8 @@ class backup_activity_grades_structure_step extends backup_structure_step {
             'sortorder', 'display', 'decimals', 'hidden', 'locked', 'locktime',
             'needsupdate', 'timecreated', 'timemodified'));
 
-        $rules = new backup_nested_element('activity_grade_rules');
-        $rule = new backup_nested_element('activity_grade_rule', ['id'], ['rulename']);
+        $rules = new backup_nested_element('grade_rules');
+        $rule = new backup_nested_element('grade_rule', ['id'], ['gradeitemid', 'rulename']);
 
         $grades = new backup_nested_element('grade_grades');
 
