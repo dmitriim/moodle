@@ -918,7 +918,10 @@ class grade_category extends grade_object {
             $sql = "UPDATE {grade_grades}
                        SET aggregationstatus = 'unknown',
                            aggregationweight = 0
-                     WHERE itemid $itemsql AND userid = :userid";
+                     WHERE itemid $itemsql
+                           AND userid = :userid
+                           AND aggregationstatus <> 'unknown'
+                           AND aggregationweight <> 0";
             $DB->execute($sql, $itemlist);
         }
 
@@ -929,9 +932,17 @@ class grade_category extends grade_object {
                 $sql = "UPDATE {grade_grades}
                            SET aggregationstatus = 'used',
                                aggregationweight = :contribution
-                         WHERE itemid = :itemid AND userid = :userid";
+                         WHERE itemid = :itemid
+                               AND userid = :userid
+                               AND aggregationstatus <> 'used'
+                               AND aggregationweight <> :notcontribution";
 
-                $params = array('contribution' => $contribution, 'itemid' => $gradeitemid, 'userid' => $userid);
+                $params = array(
+                    'contribution' => $contribution,
+                    'itemid' => $gradeitemid,
+                    'userid' => $userid,
+                    'notcontribution' => $contribution
+                );
                 $DB->execute($sql, $params);
             }
         }
@@ -945,7 +956,10 @@ class grade_category extends grade_object {
             $sql = "UPDATE {grade_grades}
                        SET aggregationstatus = 'novalue',
                            aggregationweight = 0
-                     WHERE itemid $itemsql AND userid = :userid";
+                     WHERE itemid $itemsql
+                           AND userid = :userid
+                           AND aggregationstatus <> 'novalue'
+                           AND aggregationweight <> 0";
 
             $DB->execute($sql, $itemlist);
         }
@@ -959,7 +973,10 @@ class grade_category extends grade_object {
             $sql = "UPDATE {grade_grades}
                        SET aggregationstatus = 'dropped',
                            aggregationweight = 0
-                     WHERE itemid $itemsql AND userid = :userid";
+                     WHERE itemid $itemsql
+                           AND userid = :userid
+                           AND aggregationstatus <> 'dropped'
+                           AND aggregationweight <> 0";
 
             $DB->execute($sql, $itemlist);
         }
@@ -2686,8 +2703,8 @@ class grade_category extends grade_object {
      */
     public static function updated_forced_settings() {
         global $CFG, $DB;
-        $params = array(1, 'course', 'category');
-        $sql = "UPDATE {grade_items} SET needsupdate=? WHERE itemtype=? or itemtype=?";
+        $params = array(1, 1, 'course', 'category');
+        $sql = "UPDATE {grade_items} SET needsupdate=? WHERE needsupdate <> ? AND ( itemtype=? or itemtype=? )";
         $DB->execute($sql, $params);
     }
 
