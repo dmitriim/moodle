@@ -217,10 +217,11 @@ function enrol_is_enabled($enrol) {
  *
  * This function may be very slow, use only once after log-in or login-as.
  *
- * @param stdClass $user
+ * @param stdClass $user User object.
+ * @param bool $force Force to ignore checking sync intervals.
  * @return void
  */
-function enrol_check_plugins($user) {
+function enrol_check_plugins($user, bool $force = false) {
     global $CFG;
 
     if (empty($user->id) or isguestuser($user)) {
@@ -237,6 +238,14 @@ function enrol_check_plugins($user) {
         return;
     }
 
+    if (!$force) {
+        $syncinterval = isset($CFG->enrolments_sync_interval) ? (int)$CFG->enrolments_sync_interval : 0;
+        $lastsync = get_user_preferences('last_time_enrolments_synced', 0, $user);
+        if (time() - $lastsync < $syncinterval) {
+            return;
+        }
+    }
+
     $inprogress[$user->id] = true;  // Set the flag
 
     $enabled = enrol_get_plugins(true);
@@ -245,6 +254,7 @@ function enrol_check_plugins($user) {
         $enrol->sync_user_enrolments($user);
     }
 
+    set_user_preference('last_time_enrolments_synced', time(), $user);
     unset($inprogress[$user->id]);  // Unset the flag
 }
 

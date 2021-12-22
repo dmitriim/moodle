@@ -153,6 +153,8 @@ such as the title and strings for continue and cancel buttons.
 * The method get_enabled_plugin($pluginname) has been added to the core_plugininfo\base class. It has a default implementation for
 all the plugininfo classes and it can be overwritten when required (like it has been done with filter). This method returns the
 current value for a pluginname depending on its status (enabled, disabled, other...).
+* New setting $CFG->enrolments_sync_interval controls a frequency of enrolment syncing after a normal login and after login of
+  each api call. Function enrol_check_plugins now has $force flag to bypass checking for that setting.
 
 === 3.11.4 ===
 * A new option dontforcesvgdownload has been added to the $options parameter of the send_file() function.

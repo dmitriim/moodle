@@ -1488,4 +1488,73 @@ class enrollib_test extends advanced_testcase {
             ],
         ];
     }
+
+    /**
+     * Test that user preference 'last_time_enrolments_synced' is set after syncing enrolments.
+     */
+    public function test_last_time_enrolments_synced_is_set_after_sync_user_enrolments() {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+
+        $this->assertNull(get_user_preferences('last_time_enrolments_synced', null, $user));
+
+        enrol_check_plugins($user);
+        $firstrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($firstrun);
+        sleep(1);
+
+        enrol_check_plugins($user);
+        $secondrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($secondrun);
+        $this->assertTrue((int)$secondrun > (int)$firstrun);
+    }
+
+    /**
+     * Test that enrolment sync is skipped if we don't pass preconfigured interval between syncs.
+     */
+    public function test_skip_enrolments_sync_if_have_not_passed_interval() {
+        global $CFG;
+
+        $this->resetAfterTest();
+
+        $CFG->enrolments_sync_interval = 1000;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->assertNull(get_user_preferences('last_time_enrolments_synced', null, $user));
+
+        enrol_check_plugins($user);
+        $firstrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($firstrun);
+
+        sleep(1);
+        enrol_check_plugins($user);
+        $secondrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($secondrun);
+        $this->assertTrue((int)$secondrun == (int)$firstrun);
+    }
+
+    /**
+     * Test that enrolment sync is not skipped if we don't pass preconfigured interval between syncs, but forcing sync.
+     */
+    public function test_do_not_skip_enrolments_sync_if_have_not_passed_interval_but_forced() {
+        global $CFG;
+
+        $this->resetAfterTest();
+
+        $CFG->enrolments_sync_interval = 1000;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->assertNull(get_user_preferences('last_time_enrolments_synced', null, $user));
+
+        enrol_check_plugins($user);
+        $firstrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($firstrun);
+
+        sleep(1);
+        enrol_check_plugins($user, true);
+        $secondrun = get_user_preferences('last_time_enrolments_synced', null, $user);
+        $this->assertNotNull($secondrun);
+        $this->assertTrue((int)$secondrun > (int)$firstrun);
+    }
+
 }
