@@ -1629,8 +1629,8 @@ class global_navigation extends navigation_node {
             }
         }
 
-        // Give the local plugins a chance to include some navigation if they want.
-        $this->load_local_plugin_navigation();
+        // Give plugins a chance to modify navigation if they want.
+        $this->plugins_extend_navigation();
 
         // Remove any empty root nodes
         foreach ($this->rootnodes as $node) {
@@ -1663,11 +1663,15 @@ class global_navigation extends navigation_node {
     }
 
     /**
-     * This function gives local plugins an opportunity to modify navigation.
+     * This function gives plugins an opportunity to modify navigation.
      */
-    protected function load_local_plugin_navigation() {
-        foreach (get_plugin_list_with_function('local', 'extend_navigation') as $function) {
-            $function($this);
+    protected function plugins_extend_navigation() {
+        if ($pluginsfunction = get_plugins_with_function('extend_navigation')) {
+            foreach ($pluginsfunction as $plugintype => $plugins) {
+                foreach ($plugins as $pluginfunction) {
+                    $pluginfunction($this);
+                }
+            }
         }
     }
 
@@ -3446,8 +3450,8 @@ class global_navigation_for_ajax extends global_navigation {
             $this->load_for_user(null, true);
         }
 
-        // Give the local plugins a chance to include some navigation if they want.
-        $this->load_local_plugin_navigation();
+        // Give plugins a chance to modify navigation if they want.
+        $this->plugins_extend_navigation();
 
         $this->find_expandable($this->expandable);
         return $this->expandable;

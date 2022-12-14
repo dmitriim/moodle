@@ -1,5 +1,8 @@
 This files describes API changes in core libraries and APIs,
 information provided here is intended especially for developers.
+=== 4.2 ===
+* Now all plugin types can extend navigation using <frankenstyle>_extend_navigation callback.
+
 === 4.1 ===
 
 * HTMLPurifier has been upgraded to the latest version - 4.16.0
