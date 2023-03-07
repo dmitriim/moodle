@@ -62,6 +62,7 @@ class core_cohort_external extends external_api {
                                 'the cohort theme. The allowcohortthemes setting must be enabled on Moodle',
                                 VALUE_OPTIONAL
                             ),
+                            'customfields' => self::build_custom_fields_parameters_structure(),
                         )
                     )
                 )
@@ -128,6 +129,16 @@ class core_cohort_external extends external_api {
 
             // Validate format.
             $cohort->descriptionformat = util::validate_format($cohort->descriptionformat);
+
+            // Custom fields.
+            if (!empty($cohort->customfields)) {
+                foreach ($cohort->customfields as $field) {
+                    $fieldname = self::build_custom_field_name($field['shortname']);
+                    $cohort->{$fieldname} = $field['value'];
+                }
+                unset($cohort->customfields);
+            }
+
             $cohort->id = cohort_add_cohort($cohort);
 
             list($cohort->description, $cohort->descriptionformat) =
@@ -274,6 +285,8 @@ class core_cohort_external extends external_api {
                 \core_external\util::format_text($cohort->description, $cohort->descriptionformat,
                         $context, 'cohort', 'description', $cohort->id);
 
+            $cohort->customfields = self::get_custom_fields_data($cohort->id);
+
             $cohortsinfo[] = (array) $cohort;
         }
         return $cohortsinfo;
@@ -297,6 +310,7 @@ class core_cohort_external extends external_api {
                     'descriptionformat' => new external_format_value('description'),
                     'visible' => new external_value(PARAM_BOOL, 'cohort visible'),
                     'theme' => new external_value(PARAM_THEME, 'cohort theme', VALUE_OPTIONAL),
+                    'customfields' => self::build_custom_fields_returns_structure(),
                 )
             )
         );
@@ -410,6 +424,8 @@ class core_cohort_external extends external_api {
                 \core_external\util::format_text($cohort->description, $cohort->descriptionformat,
                         $cohortcontext, 'cohort', 'description', $cohort->id);
 
+            $cohort->customfields = self::get_custom_fields_data($cohort->id);
+
             $cohorts[$key] = $cohort;
         }
 
@@ -432,6 +448,7 @@ class core_cohort_external extends external_api {
                     'descriptionformat' => new external_format_value('description'),
                     'visible' => new external_value(PARAM_BOOL, 'cohort visible'),
                     'theme' => new external_value(PARAM_THEME, 'cohort theme', VALUE_OPTIONAL),
+                    'customfields' => self::build_custom_fields_returns_structure(),
                 ))
             )
         ));
@@ -469,6 +486,7 @@ class core_cohort_external extends external_api {
                                 'the cohort theme. The allowcohortthemes setting must be enabled on Moodle',
                                 VALUE_OPTIONAL
                             ),
+                            'customfields' => self::build_custom_fields_parameters_structure(),
                         )
                     )
                 )
@@ -539,6 +557,15 @@ class core_cohort_external extends external_api {
 
             if (!empty($cohort->description)) {
                 $cohort->descriptionformat = util::validate_format($cohort->descriptionformat);
+            }
+
+            // Custom fields.
+            if (!empty($cohort->customfields)) {
+                foreach ($cohort->customfields as $field) {
+                    $fieldname = self::build_custom_field_name($field['shortname']);
+                    $cohort->{$fieldname} = $field['value'];
+                }
+                unset($cohort->customfields);
             }
 
             cohort_update_cohort($cohort);
@@ -824,5 +851,78 @@ class core_cohort_external extends external_api {
                 )
             )
         );
+    }
+
+    /**
+     * Builds a structure for custom fields parameters.
+     *
+     * @return \core_external\external_multiple_structure
+     */
+    protected static function build_custom_fields_parameters_structure(): external_multiple_structure {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'shortname' => new external_value(PARAM_ALPHANUMEXT, 'The shortname of the custom field'),
+                    'value' => new external_value(PARAM_RAW, 'The value of the custom field'),
+                )
+            ), 'Custom fields for the cohort', VALUE_OPTIONAL
+        );
+    }
+
+    /**
+     * Builds a structure for custom fields returns.
+     *
+     * @return \core_external\external_multiple_structure
+     */
+    protected static function build_custom_fields_returns_structure(): external_multiple_structure {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'name' => new external_value(PARAM_RAW, 'The name of the custom field'),
+                    'shortname' => new external_value(PARAM_RAW,
+                        'The shortname of the custom field - to be able to build the field class in the code'),
+                    'type' => new external_value(PARAM_ALPHANUMEXT,
+                        'The type of the custom field - text field, checkbox...'),
+                    'valueraw' => new external_value(PARAM_RAW, 'The raw value of the custom field'),
+                    'value' => new external_value(PARAM_RAW, 'The value of the custom field'),
+                )
+            ), 'Custom fields', VALUE_OPTIONAL
+        );
+    }
+
+    /**
+     * Returns custom fields data for provided cohort.
+     *
+     * @param int $cohortid cohort ID to provide data for.
+     * @return array
+     */
+    protected static function get_custom_fields_data(int $cohortid): array {
+        $result = [];
+        $handler = core_cohort\customfield\cohort_handler::create();
+
+        $customfieldsdata = $handler->export_instance_data($cohortid);
+        if (!empty($customfieldsdata)) {
+            foreach ($customfieldsdata as $data) {
+                $result[] = [
+                    'type' => $data->get_type(),
+                    'value' => $data->get_value(),
+                    'valueraw' => $data->get_data_controller()->get_value(),
+                    'name' => $data->get_name(),
+                    'shortname' => $data->get_shortname()
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Builds a suitable name of a custom field for a custom field handler based on provided shortname.
+     *
+     * @param string $shortname shortname to use.
+     * @return string
+     */
+    protected static function build_custom_field_name(string $shortname): string {
+        return 'customfield_' . $shortname;
     }
 }
