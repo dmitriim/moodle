@@ -441,8 +441,20 @@ class cachestore_file extends cache_store implements cache_is_key_aware, cache_i
         } while (!feof($handle));
         $this->lastiobytes = strlen($data);
 
+        if ($this->lastiobytes == 0) {
+            clearstatcache($file);
+            if (!file_exists($file)) {
+                // Not unexpected so just ignore and keep going.
+                error_log('WR#415252: File ' . $file . ' is not exist when it should');
+                return false;
+            } else {
+                // Need to keep debugging.
+                error_log('WR#415252: Weird! we need to keep debugging');
+            }
+        }
+
         // Return it unserialised.
-        return $this->prep_data_after_read($data);
+        return $this->prep_data_after_read($data, $file, $filename);
     }
 
     /**
@@ -548,13 +560,22 @@ class cachestore_file extends cache_store implements cache_is_key_aware, cache_i
      * Prepares the data it has been read from the cache. Undoing what was done in prep_data_before_save.
      *
      * @param string $data
+     * @param string $path
+     * @param string $filename
      * @return mixed
-     * @throws coding_exception
      */
-    protected function prep_data_after_read($data) {
+    protected function prep_data_after_read($data, $path, $filename) {
         $result = @unserialize($data);
         if ($result === false && $data != serialize(false)) {
-            throw new coding_exception('Failed to unserialise data from file. Either failed to read, or failed to write.');
+
+            $error = 'WR#415252: Failed to unserialise data from file.';
+            error_log($error .
+                ' File: ' . $path .
+                ' Data: ' . $data .
+                ' Lastiobytes: ' . $this->lastiobytes .
+                ' Key set time ' . isset($this->keys[$filename]) ? $this->keys[$filename] : 'not set' .
+                ' File modification time:  ' . filemtime($path));
+            return false;
         }
         return $result;
     }
