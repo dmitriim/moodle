@@ -442,7 +442,7 @@ class cachestore_file extends cache_store implements cache_is_key_aware, cache_i
         $this->lastiobytes = strlen($data);
 
         // Return it unserialised.
-        return $this->prep_data_after_read($data);
+        return $this->prep_data_after_read($data, $file);
     }
 
     /**
@@ -548,13 +548,16 @@ class cachestore_file extends cache_store implements cache_is_key_aware, cache_i
      * Prepares the data it has been read from the cache. Undoing what was done in prep_data_before_save.
      *
      * @param string $data
+     * @param string $path
      * @return mixed
      * @throws coding_exception
      */
-    protected function prep_data_after_read($data) {
+    protected function prep_data_after_read($data, $path) {
         $result = @unserialize($data);
         if ($result === false && $data != serialize(false)) {
-            throw new coding_exception('Failed to unserialise data from file. Either failed to read, or failed to write.');
+            throw new coding_exception(
+                'Failed to unserialise data from file. Either failed to read, or failed to write.',
+                'File: ' . $path . ' Data: ' . $data);
         }
         return $result;
     }
