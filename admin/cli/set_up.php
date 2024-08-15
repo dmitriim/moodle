@@ -66,8 +66,9 @@ The script will clean up before execution.
 Options:
     -h --help      Print this help.
     --run          Execute Set up. If this option is not set, then the script will be run in a dry mode.
+    --skipcleanup  Skips cleaning up.     
     --onlycleanup  Only cleans up: deletes all cohort enrolments, all cohorts, all conditions and rules 
-                   as well as custom profile fields.
+                   as well as custom profile fields.                 
 
 Usage:
     # php set_up.php  --run
@@ -76,6 +77,7 @@ Usage:
 list($options, $unrecognised) = cli_get_params([
     'help' => false,
     'run' => false,
+    'skipcleanup' => false,
     'onlycleanup' => false,
 ], [
     'h' => 'help'
@@ -345,35 +347,37 @@ function set_up_delete_custom_fields(): void {
 $transaction = $DB->start_delegated_transaction();
 
 try {
-    // Cleaning up stuff.
-    if ($options['run']) {
-        set_up_delete_enrolments();
-        cli_writeln("Deleted all cohort enrolments");
-    } else {
-        cli_writeln("Will deleted all cohort enrolments");
-    }
+    if (!$options['skipcleanup']) {
+        // Cleaning up stuff.
+        if ($options['run']) {
+            set_up_delete_enrolments();
+            cli_writeln("Deleted all cohort enrolments");
+        } else {
+            cli_writeln("Will deleted all cohort enrolments");
+        }
 
-    if ($options['run']) {
-        set_up_delete_rules_and_conditions();
-        cli_writeln("Deleted all dynamic cohorts rules and conditions");
-    } else {
-        cli_writeln("Will deleted all dynamic cohorts rules and conditions");
-    }
+        if ($options['run']) {
+            set_up_delete_rules_and_conditions();
+            cli_writeln("Deleted all dynamic cohorts rules and conditions");
+        } else {
+            cli_writeln("Will deleted all dynamic cohorts rules and conditions");
+        }
 
-    if ($options['run']) {
-        set_up_delete_cohorts();
-        cli_writeln("Deleted all cohorts");
-    } else {
-        cli_writeln("Will deleted all cohorts");
-    }
+        if ($options['run']) {
+            set_up_delete_cohorts();
+            cli_writeln("Deleted all cohorts");
+        } else {
+            cli_writeln("Will deleted all cohorts");
+        }
 
-    if ($options['run']) {
-        set_up_delete_custom_fields();
-        cli_writeln("Deleted required custom profile fields");
-    } else {
-        cli_writeln("Will deleted required custom profile fields");
+        if ($options['run']) {
+            set_up_delete_custom_fields();
+            cli_writeln("Deleted required custom profile fields");
+        } else {
+            cli_writeln("Will deleted required custom profile fields");
+        }
     }
-
+    
     if (!$options['onlycleanup']) {
         // Create custom profile fields category.
         $profilefieldcategory = $DB->get_record('user_info_category', ['name' => SETUP_PROFILE_CATEGORY]);
