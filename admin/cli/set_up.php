@@ -125,6 +125,85 @@ function set_up_add_user_profile_field(string $name, string $shortname, string $
 }
 
 /**
+ * Create a custom fields category.
+ *
+ * @return int
+ */
+function set_up_add_cohort_custom_field_category() {
+    $handler = \core_customfield\handler::get_handler('core_cohort', 'cohort', 0);
+    $categories = $handler->get_categories_with_fields();
+
+    foreach ($categories as $category) {
+        if ($category->get('name') == 'Metadata') {
+            return $category->get('id');
+        }
+    }
+
+    return $handler->create_category('Metadata');
+}
+
+/**
+ * Delete all cohorts custom fields.
+ * @return void
+ */
+function set_up_delete_cohort_custom_fields(): void {
+    $handler = \core_customfield\handler::get_handler('core_cohort', 'cohort', 0);
+
+    $categories = $handler->get_categories_with_fields();
+    foreach ($categories as $category) {
+        if ($category->get('name') == 'Metadata') {
+            $handler->delete_category($category);
+        }
+    }
+}
+
+
+/**
+ * Add cohort custom field.
+ *
+ * @param int $categoryid Custom field category id.
+ * @param string $shortname Shor name of the field.
+ * @param string $type Field type.
+ * @param array $configdata Config data for a field.
+ * @return void
+ */
+function set_up_add_cohort_custom_field(int $categoryid, string $shortname, string $type = 'text', array $configdata = []): void {
+
+    $category = \core_customfield\category_controller::create($categoryid);
+    $handler = $category->get_handler();
+
+    foreach ($handler->get_fields() as $field) {
+        // Field already exists.
+        if ($field->get('shortname') === $shortname) {
+            cli_writeln("Cohort custom field '$shortname' already exists. Skipping.");
+            return;
+        }
+    }
+
+    $record = new stdClass();
+    $record->categoryid = $categoryid;
+    $record->name = ucfirst($shortname);
+    $record->shortname = $shortname;
+    $record->type = $type;
+
+    $configdata += [
+        'required' => 0,
+        'uniquevalues' => 0,
+        'locked' => 0,
+        'visibility' => 2,
+        'defaultvalue' => '',
+        'defaultvalueformat' => FORMAT_MOODLE,
+        'displaysize' => 0,
+        'maxlength' => 0,
+        'ispassword' => 0,
+    ];
+
+    $record->configdata = json_encode($configdata);
+    $field = \core_customfield\field_controller::create(0, (object)['type' => $record->type], $category);
+    $handler->save_field_configuration($field, $record);
+}
+
+/**
  * Helper method to add enrolment method to a course.
  *
  * @param stdClass $course Course.
@@ -243,12 +322,6 @@ function set_up_add_cohort(stdClass $cohort, array $options): void {
 /**
  * Gets a list of tags related to courses.
  *
- * @return array
- */
-
-/**
- * Gets a list of tags related to courses.
- *
  * @param int $courseid Optional to filter by course ID.
  * @return array
  */
@@ -262,10 +335,10 @@ function set_up_get_course_tags(int $courseid = 0): array {
         $params[] = $courseid;
     }
 
-    $sql = "SELECT DISTINCT t.rawname  
+    $sql = "SELECT DISTINCT t.id, t.rawname  
               FROM {tag} t
               JOIN {tag_instance} ti ON t.id = ti.tagid
-             WHERE ti.itemtype = 'course' $where ORDER BY t.rawname";
+             WHERE ti.itemtype = 'course' $where ORDER BY t.id, t.rawname";
     return $DB->get_records_sql($sql, $params);
 }
 
@@ -330,7 +403,7 @@ function set_up_delete_cohorts(): void {
 /**
  * Delete custom profile fields.
  */
-function set_up_delete_custom_fields(): void {
+function set_up_delete_profile_custom_fields(): void {
     global $DB;
 
     $shortnames = ['category', 'course', 'tag', 'enrolleduntil'];
@@ -342,6 +415,9 @@ function set_up_delete_custom_fields(): void {
         }
     }
 }
+
+// Need admin permissions to use custom fields APIs.
+\core\cron::setup_user();
 
 // We want to rollback if anything exploded.
 $transaction = $DB->start_delegated_transaction();
@@ -360,25 +436,44 @@ try {
             set_up_delete_rules_and_conditions();
             cli_writeln("Deleted all dynamic cohorts rules and conditions");
         } else {
-            cli_writeln("Will deleted all dynamic cohorts rules and conditions");
+            cli_writeln("Will delete all dynamic cohorts rules and conditions");
         }
 
         if ($options['run']) {
             set_up_delete_cohorts();
             cli_writeln("Deleted all cohorts");
         } else {
-            cli_writeln("Will deleted all cohorts");
+            cli_writeln("Will delete all cohorts");
         }
 
         if ($options['run']) {
-            set_up_delete_custom_fields();
+            set_up_delete_cohort_custom_fields();
+            cli_writeln("Deleted all cohort custom fields");
+        } else {
+            cli_writeln("Will delete all cohort custom fields");
+        }
+
+
+        if ($options['run']) {
+            set_up_delete_profile_custom_fields();
             cli_writeln("Deleted required custom profile fields");
         } else {
-            cli_writeln("Will deleted required custom profile fields");
+            cli_writeln("Will delete required custom profile fields");
         }
     }
     
     if (!$options['onlycleanup']) {
+        // Create cohort custom fields.
+        $categoryid = set_up_add_cohort_custom_field_category();
+        foreach (['type', 'id'] as $shortname) {
+            if ($options['run']) {
+                set_up_add_cohort_custom_field($categoryid, $shortname);
+                cli_writeln("Added cohort custom field '$shortname'");
+            } else {
+                cli_writeln("Will add cohort custom field '$shortname'");
+            }
+        }
+
         // Create custom profile fields category.
         $profilefieldcategory = $DB->get_record('user_info_category', ['name' => SETUP_PROFILE_CATEGORY]);
         if (empty($profilefieldcategory)) {
@@ -493,6 +588,9 @@ try {
             $cohort->name = $tag->rawname;
             $cohort->idnumber = $tag->rawname;
             $cohort->description = 'Tag related';
+            $cohort->customfield_type = 'tag';
+            $cohort->customfield_id = $tag->id;
+
             set_up_add_cohort($cohort, $options);
             set_up_add_rule($cohort, SETUP_FIELD_TAG, $options);
         }
@@ -504,6 +602,9 @@ try {
             $cohort->name = $category->name;
             $cohort->idnumber = $category->name;
             $cohort->description = 'Category related';
+            $cohort->customfield_type = 'category';
+            $cohort->customfield_id = $category->id;
+
             set_up_add_cohort($cohort, $options);
             set_up_add_rule($cohort, SETUP_FIELD_CATEGORY, $options);
         }
@@ -518,6 +619,9 @@ try {
             $cohort->name = $course->{SETUP_COURSE_NAME};
             $cohort->idnumber = $course->{SETUP_COURSE_NAME};
             $cohort->description = 'Course related';
+            $cohort->customfield_type = 'course';
+            $cohort->customfield_id = $course->id;
+
             set_up_add_cohort($cohort, $options);
             set_up_add_rule($cohort, SETUP_FIELD_COURSE, $options);
         }
