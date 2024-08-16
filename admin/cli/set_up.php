@@ -26,14 +26,21 @@
  *
  * This script creates custom field category and custom fields to store courses,
  * categories, tags and unenrolment date.
- * Then it goes through all categories, courses and tags and creates related cohorts.
+ * It also creates cohort custom fields "type" and "id" to save metadata information
+ * for cohorts.
+ * Then it goes through all categories, courses and tags and creates related cohorts. It
+ * populates type and id custom fields for each cohort to be able to identify entities
+ * cohorts are related to. E.g. if 'type' is course and 'id' is 5, it means that the given cohort
+ * created based on a course with id 5.
  * For each cohort it creates a rule for dynamic cohorts plugin so users with matching
  * related fields can be added to cohort. Then it goes through all courses and
  * adds cohort sync enrolment instances: one for course cohort, one for category cohort
  * and if a course have tags, then one for each tag related cohort.
  *
- * Then, once a user us created/updated, based on data in custom fields he would be
+ * Then, once a user is created/updated, based on data in custom fields he would be
  * added to one of cohorts which will enroll the user to all related courses.
+ *
+ * The script has few options. Please run it with --help to see them all.
  *
  * @package    core
  * @copyright  2024 Dmitrii Metelkin <dnmetelk@gmail.com>
