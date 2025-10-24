@@ -249,7 +249,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         // Create what we expect to be returned when querying the two courses.
         // First for the student user.
         $allusersfields = ['id', 'coursemodule', 'course', 'name', 'intro', 'introformat', 'introfiles', 'lang',
-                                'timeopen', 'timeclose', 'grademethod', 'section', 'visible', 'groupmode', 'groupingid',
+                                'timeopen', 'timeclose', 'duedate', 'grademethod', 'section', 'visible', 'groupmode', 'groupingid',
                                 'attempts', 'timelimit', 'grademethod', 'decimalpoints', 'questiondecimalpoints', 'sumgrades',
                                 'grade', 'preferredbehaviour', 'hasfeedback', 'enableaitools', 'enabledaiactions'];
         $userswithaccessfields = ['attemptonlast', 'reviewattempt', 'reviewcorrectness', 'reviewmaxmarks', 'reviewmarks',
@@ -276,6 +276,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $quiz1->lang = '';
         $quiz1->enableaitools = null;
         $quiz1->enabledaiactions = null;
+        $quiz1->duedate = 0;
 
         $quiz2->coursemodule = $quiz2->cmid;
         $quiz2->introformat = 1;
@@ -291,6 +292,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $quiz2->lang = '';
         $quiz2->enableaitools = null;
         $quiz2->enabledaiactions = null;
+        $quiz2->duedate = 0;
 
         foreach (array_merge($allusersfields, $userswithaccessfields) as $field) {
             $expected1[$field] = $quiz1->{$field};
@@ -365,7 +367,7 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $this->assertEquals($quiz2->course, $result['quizzes'][0]['course']);
 
         $this->assertFalse(isset($result['quizzes'][0]['timelimit']));
-
+        $this->assertFalse(isset($result['quizzes'][0]['duedate']));
     }
 
     /**

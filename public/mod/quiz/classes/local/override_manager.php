@@ -33,7 +33,7 @@ use mod_quiz\quiz_settings;
  */
 class override_manager {
     /** @var array quiz setting keys that can be overwritten **/
-    private const OVERRIDEABLE_QUIZ_SETTINGS = ['timeopen', 'timeclose', 'timelimit', 'attempts', 'password'];
+    private const OVERRIDEABLE_QUIZ_SETTINGS = ['timeopen', 'timeclose', 'duedate', 'timelimit', 'attempts', 'password'];
 
     /**
      * Create override manager
@@ -123,6 +123,16 @@ class override_manager {
         // Ensure timeclose is later than timeopen, if both are set.
         if (!empty($formdata->timeclose) && !empty($formdata->timeopen) && $formdata->timeclose <= $formdata->timeopen) {
             $errors['timeclose'][] = new \lang_string('closebeforeopen', 'quiz');
+        }
+
+        // Ensure duedate is later than timeopen, if both are set.
+        if (!empty($formdata->timeopen) && !empty($formdata->duedate) && $formdata->duedate <= $formdata->timeopen) {
+            $errors['duedate'][] = new \lang_string('duedatebeforeopen', 'quiz');
+        }
+
+        // Ensure timeclose is later than duedate, if both are set.
+        if (!empty($formdata->timeclose) && !empty($formdata->duedate) && $formdata->timeclose < $formdata->duedate) {
+            $errors['duedate'][] = new \lang_string('duedateafterclose', 'quiz');
         }
 
         // Ensure attempts is a integer greater than or equal to 0 (0 is unlimited attempts).

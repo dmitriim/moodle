@@ -82,6 +82,7 @@ define('QUIZ_NAVMETHOD_SEQ',  'sequential');
  */
 define('QUIZ_EVENT_TYPE_OPEN', 'open');
 define('QUIZ_EVENT_TYPE_CLOSE', 'close');
+define('QUIZ_EVENT_TYPE_DUE', 'due');
 
 require_once(__DIR__ . '/deprecatedlib.php');
 
@@ -243,6 +244,7 @@ function quiz_update_effective_access($quiz, $userid) {
     if (!$override) {
         $override = new stdClass();
         $override->timeopen = null;
+        $override->duedate = null;
         $override->timeclose = null;
         $override->timelimit = null;
         $override->attempts = null;
@@ -263,6 +265,7 @@ function quiz_update_effective_access($quiz, $userid) {
         // Combine the overrides.
         $opens = [];
         $closes = [];
+        $duedates = [];
         $limits = [];
         $attempts = [];
         $passwords = [];
@@ -270,6 +273,9 @@ function quiz_update_effective_access($quiz, $userid) {
         foreach ($records as $gpoverride) {
             if (isset($gpoverride->timeopen)) {
                 $opens[] = $gpoverride->timeopen;
+            }
+            if (isset($gpoverride->duedate)) {
+                $duedates[] = $gpoverride->duedate;
             }
             if (isset($gpoverride->timeclose)) {
                 $closes[] = $gpoverride->timeclose;
@@ -293,6 +299,13 @@ function quiz_update_effective_access($quiz, $userid) {
                 $override->timeclose = 0;
             } else {
                 $override->timeclose = max($closes);
+            }
+        }
+        if (is_null($override->duedate) && count($duedates)) {
+            if (in_array(0, $duedates)) {
+                $override->duedate = 0;
+            } else {
+                $override->duedate = max($duedates);
             }
         }
         if (is_null($override->timelimit) && count($limits)) {
@@ -319,7 +332,7 @@ function quiz_update_effective_access($quiz, $userid) {
     }
 
     // Merge with quiz defaults.
-    $keys = ['timeopen', 'timeclose', 'timelimit', 'attempts', 'password', 'extrapasswords'];
+    $keys = ['timeopen', 'timeclose', 'duedate', 'timelimit', 'attempts', 'password', 'extrapasswords'];
     foreach ($keys as $key) {
         if (isset($override->{$key})) {
             $quiz->{$key} = $override->{$key};
@@ -1215,10 +1228,12 @@ function quiz_update_events($quiz, $override = null) {
         $userid    = isset($current->userid)? $current->userid : 0;
         $timeopen  = isset($current->timeopen)?  $current->timeopen : $quiz->timeopen;
         $timeclose = isset($current->timeclose)? $current->timeclose : $quiz->timeclose;
+        $duedate = isset($current->duedate) ? $current->duedate : $quiz->duedate;
 
-        // Only add open/close events for an override if they differ from the quiz default.
+        // Only add open/close/duedate events for an override if they differ from the quiz default.
         $addopen  = empty($current->id) || !empty($current->timeopen);
         $addclose = empty($current->id) || !empty($current->timeclose);
+        $addduedate = empty($current->id) || !empty($current->duedate);
 
         if (!empty($quiz->coursemodule)) {
             $cmid = $quiz->coursemodule;
@@ -1273,7 +1288,7 @@ function quiz_update_events($quiz, $override = null) {
             $eventname = $quiz->name;
         }
 
-        if ($addopen or $addclose) {
+        if ($addopen || $addclose || $addduedate) {
             // Separate start and end events.
             $event->timeduration  = 0;
             if ($timeopen && $addopen) {
@@ -1305,6 +1320,26 @@ function quiz_update_events($quiz, $override = null) {
                 }
                 calendar_event::create($event, false);
             }
+
+            if ($duedate && $addduedate) {
+                if ($oldevent = array_shift($oldevents)) {
+                    $event->id = $oldevent->id;
+                } else {
+                    unset($event->id);
+                }
+                $event->type      = CALENDAR_EVENT_TYPE_ACTION;
+                $event->name      = get_string('quizeventduedate', 'quiz', $eventname);
+                $event->timestart = $duedate;
+                $event->timesort  = $duedate;
+                $event->eventtype = QUIZ_EVENT_TYPE_DUE;
+                if ($groupid && $grouppriorities !== null) {
+                    $duepriorities = $grouppriorities['duedate'];
+                    if (isset($duepriorities[$duedate])) {
+                        $event->priority = $duepriorities[$duedate];
+                    }
+                }
+                calendar_event::create($event, false);
+            }
         }
     }
 
@@ -1316,10 +1351,10 @@ function quiz_update_events($quiz, $override = null) {
 }
 
 /**
- * Calculates the priorities of timeopen and timeclose values for group overrides for a quiz.
+ * Calculates the priorities of timeopen, timeclose and due date values for group overrides for a quiz.
  *
  * @param int $quizid The quiz ID.
- * @return array|null Array of group override priorities for open and close times. Null if there are no group overrides.
+ * @return ?array List of group override priorities for timeopen, timeclose and duedate times. Null if there are no group overrides.
  */
 function quiz_get_group_override_priorities($quizid) {
     global $DB;
@@ -1327,19 +1362,23 @@ function quiz_get_group_override_priorities($quizid) {
     // Fetch group overrides.
     $where = 'quiz = :quiz AND groupid IS NOT NULL';
     $params = ['quiz' => $quizid];
-    $overrides = $DB->get_records_select('quiz_overrides', $where, $params, '', 'id, timeopen, timeclose');
+    $overrides = $DB->get_records_select('quiz_overrides', $where, $params, '', 'id, timeopen, timeclose, duedate');
     if (!$overrides) {
         return null;
     }
 
     $grouptimeopen = [];
     $grouptimeclose = [];
+    $groupduedates = [];
     foreach ($overrides as $override) {
         if ($override->timeopen !== null && !in_array($override->timeopen, $grouptimeopen)) {
             $grouptimeopen[] = $override->timeopen;
         }
         if ($override->timeclose !== null && !in_array($override->timeclose, $grouptimeclose)) {
             $grouptimeclose[] = $override->timeclose;
+        }
+        if ($override->duedate !== null && !in_array($override->duedate, $groupduedates)) {
+            $groupduedates[] = $override->duedate;
         }
     }
 
@@ -1361,9 +1400,19 @@ function quiz_get_group_override_priorities($quizid) {
         $closegrouppriorities[$timeclose] = $closepriority++;
     }
 
+    // Sort due date times in descending manner. The later duedate gets higher priority.
+    rsort($groupduedates);
+    // Set priorities.
+    $duedategrouppriorities = [];
+    $duedatepriority = 1;
+    foreach ($groupduedates as $duedate) {
+        $duedategrouppriorities[$duedate] = $duedatepriority++;
+    }
+
     return [
         'open' => $opengrouppriorities,
-        'close' => $closegrouppriorities
+        'close' => $closegrouppriorities,
+        'duedate' => $duedategrouppriorities,
     ];
 }
 
@@ -1532,13 +1581,21 @@ function quiz_reset_userdata($data) {
                          SET timeclose = timeclose + ?
                        WHERE quiz IN (SELECT id FROM {quiz} WHERE course = ?)
                          AND timeclose <> 0", [$data->timeshift, $data->courseid]);
+        $DB->execute("UPDATE {quiz_overrides}
+                         SET duedate = duedate + ?
+                       WHERE quiz IN (SELECT id FROM {quiz} WHERE course = ?)
+                         AND duedate <> 0", [$data->timeshift, $data->courseid]);
 
         $purgeoverrides = true;
 
         // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
         // See MDL-9367.
-        shift_course_mod_dates('quiz', ['timeopen', 'timeclose'],
-                $data->timeshift, $data->courseid);
+        shift_course_mod_dates(
+            'quiz',
+            ['timeopen', 'timeclose', 'duedate'],
+            $data->timeshift,
+            $data->courseid
+        );
 
         $status[] = [
             'component' => $componentstr,
@@ -2165,7 +2222,7 @@ function quiz_get_coursemodule_info($coursemodule) {
 
     $dbparams = ['id' => $coursemodule->instance];
     $fields = 'id, name, intro, introformat, completionattemptsexhausted, completionminattempts,
-        timeopen, timeclose';
+        timeopen, timeclose, duedate';
     if (!$quiz = $DB->get_record('quiz', $dbparams, $fields)) {
         return false;
     }
@@ -2199,6 +2256,9 @@ function quiz_get_coursemodule_info($coursemodule) {
     if ($quiz->timeclose) {
         $result->customdata['timeclose'] = $quiz->timeclose;
     }
+    if ($quiz->duedate) {
+        $result->customdata['duedate'] = $quiz->duedate;
+    }
 
     return $result;
 }
@@ -2220,13 +2280,15 @@ function mod_quiz_cm_info_dynamic(cm_info $cm) {
         $override = (object) [
             'timeopen' => null,
             'timeclose' => null,
+            'duedate' => null,
         ];
     }
 
-    // No need to look for group overrides if there are user overrides for both timeopen and timeclose.
-    if (is_null($override->timeopen) || is_null($override->timeclose)) {
+    // No need to look for group overrides if there are user overrides.
+    if (is_null($override->timeopen) || is_null($override->timeclose) || is_null($override->duedate)) {
         $opens = [];
         $closes = [];
+        $duedates = [];
         $groupings = groups_get_user_groups($cm->course, $USER->id);
         foreach ($groupings[0] as $groupid) {
             $groupoverride = $cache->get_cached_group_override($groupid);
@@ -2235,6 +2297,9 @@ function mod_quiz_cm_info_dynamic(cm_info $cm) {
             }
             if (isset($groupoverride->timeclose)) {
                 $closes[] = $groupoverride->timeclose;
+            }
+            if (isset($groupoverride->duedate)) {
+                $duedates[] = $groupoverride->duedate;
             }
         }
         // If there is a user override for a setting, ignore the group override.
@@ -2248,6 +2313,13 @@ function mod_quiz_cm_info_dynamic(cm_info $cm) {
                 $override->timeclose = max($closes);
             }
         }
+        if (is_null($override->duedate) && count($duedates)) {
+            if (in_array(0, $duedates)) {
+                $override->duedate = 0;
+            } else {
+                $override->duedate = max($duedates);
+            }
+        }
     }
 
     // Populate some other values that can be used in calendar or on dashboard.
@@ -2256,6 +2328,9 @@ function mod_quiz_cm_info_dynamic(cm_info $cm) {
     }
     if (!is_null($override->timeclose)) {
         $cm->override_customdata('timeclose', $override->timeclose);
+    }
+    if (!is_null($override->duedate)) {
+        $cm->override_customdata('duedate', $override->duedate);
     }
 }
 
@@ -2329,20 +2404,39 @@ function mod_quiz_core_calendar_get_valid_event_timestart_range(\calendar_event 
     $mindate = null;
     $maxdate = null;
 
-    if ($event->eventtype == QUIZ_EVENT_TYPE_OPEN) {
-        if (!empty($quiz->timeclose)) {
-            $maxdate = [
-                $quiz->timeclose,
-                get_string('openafterclose', 'quiz')
-            ];
-        }
-    } else if ($event->eventtype == QUIZ_EVENT_TYPE_CLOSE) {
-        if (!empty($quiz->timeopen)) {
-            $mindate = [
-                $quiz->timeopen,
-                get_string('closebeforeopen', 'quiz')
-            ];
-        }
+    switch ($event->eventtype) {
+        case QUIZ_EVENT_TYPE_OPEN:
+            if (!empty($quiz->timeclose)) {
+                $maxdate = [
+                    $quiz->timeclose,
+                    get_string('openafterclose', 'quiz'),
+                ];
+            }
+            break;
+
+        case QUIZ_EVENT_TYPE_CLOSE:
+            if (!empty($quiz->timeopen)) {
+                $mindate = [
+                    $quiz->timeopen,
+                    get_string('closebeforeopen', 'quiz'),
+                ];
+            }
+            break;
+
+        case QUIZ_EVENT_TYPE_DUE:
+            if (!empty($quiz->timeopen)) {
+                $mindate = [
+                    $quiz->timeopen,
+                    get_string('duedatebeforeopen', 'quiz'),
+                ];
+            }
+            if (!empty($quiz->timeclose)) {
+                $maxdate = [
+                    $quiz->timeclose,
+                    get_string('duedateafterclose', 'quiz'),
+                ];
+            }
+            break;
     }
 
     return [$mindate, $maxdate];
@@ -2352,7 +2446,7 @@ function mod_quiz_core_calendar_get_valid_event_timestart_range(\calendar_event 
  * This function will update the quiz module according to the
  * event that has been modified.
  *
- * It will set the timeopen or timeclose value of the quiz instance
+ * It will set the timeopen, timeclose or due date value of the quiz instance
  * according to the type of event provided.
  *
  * @throws \moodle_exception
@@ -2363,7 +2457,7 @@ function mod_quiz_core_calendar_event_timestart_updated(\calendar_event $event, 
     global $CFG, $DB;
     require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
-    if (!in_array($event->eventtype, [QUIZ_EVENT_TYPE_OPEN, QUIZ_EVENT_TYPE_CLOSE])) {
+    if (!in_array($event->eventtype, [QUIZ_EVENT_TYPE_OPEN, QUIZ_EVENT_TYPE_CLOSE, QUIZ_EVENT_TYPE_DUE])) {
         // This isn't an event that we care about so we can ignore it.
         return;
     }
@@ -2400,23 +2494,34 @@ function mod_quiz_core_calendar_event_timestart_updated(\calendar_event $event, 
         return;
     }
 
-    if ($event->eventtype == QUIZ_EVENT_TYPE_OPEN) {
-        // If the event is for the quiz activity opening then we should
-        // set the start time of the quiz activity to be the new start
-        // time of the event.
-        if ($quiz->timeopen != $event->timestart) {
-            $quiz->timeopen = $event->timestart;
-            $modified = true;
-        }
-    } else if ($event->eventtype == QUIZ_EVENT_TYPE_CLOSE) {
-        // If the event is for the quiz activity closing then we should
-        // set the end time of the quiz activity to be the new start
-        // time of the event.
-        if ($quiz->timeclose != $event->timestart) {
-            $quiz->timeclose = $event->timestart;
-            $modified = true;
-            $closedatechanged = true;
-        }
+    switch ($event->eventtype) {
+        case QUIZ_EVENT_TYPE_OPEN:
+            // If the event is for the quiz activity opening,
+            // set the start time of the quiz to the new event time.
+            if ($quiz->timeopen != $event->timestart) {
+                $quiz->timeopen = $event->timestart;
+                $modified = true;
+            }
+            break;
+
+        case QUIZ_EVENT_TYPE_CLOSE:
+            // If the event is for the quiz activity closing,
+            // set the end time of the quiz to the new event time.
+            if ($quiz->timeclose != $event->timestart) {
+                $quiz->timeclose = $event->timestart;
+                $modified = true;
+                $closedatechanged = true;
+            }
+            break;
+
+        case QUIZ_EVENT_TYPE_DUE:
+            // If the event is for the quiz due date,
+            // set the due date of the quiz to the new event time.
+            if ($quiz->duedate != $event->timestart) {
+                $quiz->duedate = $event->timestart;
+                $modified = true;
+            }
+            break;
     }
 
     if ($modified) {
@@ -2606,6 +2711,9 @@ function mod_quiz_core_calendar_get_event_action_string(string $eventtype): stri
             break;
         case QUIZ_EVENT_TYPE_CLOSE:
             $identifier = 'quizeventcloses';
+            break;
+        case QUIZ_EVENT_TYPE_DUE:
+            $identifier = 'quizeventduedate';
             break;
         default:
             return get_string('requiresaction', 'calendar', $modulename);

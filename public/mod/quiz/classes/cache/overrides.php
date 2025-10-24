@@ -78,7 +78,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'quiz_overrides',
                     ['quiz' => $quizid, 'userid' => $userid],
-                    'timeopen, timeclose, timelimit, attempts, password'
+                    'timeopen, timeclose, timelimit, attempts, password, duedate'
                 );
                 break;
             case 'g':
@@ -86,7 +86,7 @@ class overrides implements data_source_interface {
                 $override = $DB->get_record(
                     'quiz_overrides',
                     ['quiz' => $quizid, 'groupid' => $groupid],
-                    'timeopen, timeclose, timelimit, attempts, password'
+                    'timeopen, timeclose, timelimit, attempts, password, duedate'
                 );
                 break;
             default:

@@ -81,7 +81,7 @@ if ($overrideid) {
 }
 
 // Merge quiz defaults with data.
-$keys = ['timeopen', 'timeclose', 'timelimit', 'attempts', 'password'];
+$keys = ['timeopen', 'timeclose', 'timelimit', 'attempts', 'password', 'duedate'];
 foreach ($keys as $key) {
     if (!isset($data->{$key}) || $reset) {
         $data->{$key} = $quiz->{$key};
